@@ -101,12 +101,12 @@ void before()
 
 void setup()
 {
-	// Setup locally attached sensors
+  // Setup locally attached sensors
 }
 
 void presentation()
 {
-	// Present locally attached sensors
+  // Present locally attached sensors
  // Send the sketch version information to the gateway and Controller
  sendSketchInfo("Relay", "1.0");
 
@@ -118,7 +118,7 @@ void presentation()
 
 void loop()
 {
-	// Send locally attached sensor data here
+  // Send locally attached sensor data here
 }
 
 void receive(const MyMessage &message)
