@@ -22,7 +22,7 @@
  * Version 0.5 - Quentin Peten
  *
  * DESCRIPTION
- * Sketch used to register knock sequences
+ * Sketch used to register knock sequences. Largely inspired from the sketch "SecretKnockSensor" made by Henrik Ekblad.
  */
 
 // Enable debug prints to serial monitor
@@ -42,13 +42,12 @@
 const int knockSensor = 5; // (Digital 5) for using the microphone digital output (tune knob to register knock)
 
 /*Tuning constants. Changing the values below changes the behavior of the device.*/
-int threshold = 3; // Minimum signal from the piezo to register as a knock. Higher = less sensitive. Typical values 1 - 10
-const int rejectValue = 25;        // If an individual knock is off by this percentage of a knock we don't unlock. Typical values 10-30
+const int rejectValue = 20;        // If an individual knock is off by this percentage of a knock we don't unlock. Typical values 10-30
 const int averageRejectValue = 15; // If the average timing of all the knocks is off by this percent we don't unlock. Typical values 5-20
 const int knockFadeTime = 175;     // Milliseconds we allow a knock to fade before we listen for another one. (Debounce timer.)
-const int normalTimeDiff = 500; //Normal time between knocks, in ms.
-const int maximumKnocks = 10;      // Maximum number of knocks to listen for.
-const int knockComplete = 1000; // Longest time to wait for a knock before we assume that it's finished. (milliseconds)
+const int normalTimeDiff = 450; //Normal time between knocks, in ms.
+const int maximumKnocks = 5;      // Maximum number of knocks to listen for.
+const int knockComplete = 800; // Longest time to wait for a knock before we assume that the sequence is finished. (milliseconds)
 
 int knockReadings[maximumKnocks];    // When someone knocks this array fills with the delays between knocks.
 int knockSensorValue = 0;            // Last reading of the knock sensor.
@@ -62,7 +61,7 @@ MyMessage msg5Knocks(CHILD_ID_5KNOCKS, V_SCENE_ON);
 void presentation()
 {
 	// Send the sketch version information to the gateway and Controller
-	sendSketchInfo("QKnock Switch", "0.6");
+	sendSketchInfo("QKnock Switch", "0.7");
 
 	// Register all sensors to gateway (they will be created as child devices)
 	present(CHILD_ID_2KNOCKS, S_SCENE_CONTROLLER);
@@ -75,6 +74,7 @@ void setup() {
   pinMode(knockSensor, INPUT);
   
 }
+
 void loop()
 {
 	knockSensorValue = digitalRead(knockSensor);
@@ -95,7 +95,7 @@ void listenToKnock()
   }
 
   int currentKnockNumber = 0;               // Position counter for the array.
-  int now = millis();
+  int now = 0;
 
   do {                                      // Listen for the next knock or wait for it to timeout.
     knockSensorValue = digitalRead(knockSensor);
