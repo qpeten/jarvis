@@ -1,10 +1,17 @@
-#define RELAY_1  4  // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
-#define NUMBER_OF_RELAYS 4 // Total number of attached relays
-#define RELAY_ON 0  // GPIO value to write to turn on attached relay
-#define RELAY_OFF 1 // GPIO value to write to turn off attached relay
-#define PWM_INPUT 23
-#define MAX_NUMBER_OF_SWITCH_PER_MINUTE 9
-#define ONE_MINUTE_MILLIS 60000
+/**
+ * Used to control a fan from a PWM signal.
+ * 
+ * The fan is controlled by 4 relays. Maximum one relay may be active at anytime.
+ * The script allows up to MAX_NUMBER_OF_SWITCH_PER_MINUTE changes per minute. The timer is reset each time the PWM signal indicates the fan should be off.
+ */
+
+#define RELAY_1 4  //4 // Arduino Digital I/O pin number for first relay (second on pin+1 etc)
+#define NUMBER_OF_RELAYS 4 //4 // Total number of attached relays
+#define RELAY_ON 0  //0 // GPIO value to write to turn on attached relay
+#define RELAY_OFF 1 //1 // GPIO value to write to turn off attached relay
+#define PWM_INPUT 23 //23
+#define MAX_NUMBER_OF_SWITCH_PER_MINUTE 9 //9
+#define TIMEOUT_MILLIS 60000 //60000
 
 int actualLevel = -1;
 unsigned long lastSwitch[MAX_NUMBER_OF_SWITCH_PER_MINUTE];
@@ -26,17 +33,14 @@ void loop() {
   if (newLevel == 0) {
     switchRelay(0);
   }
-  if (newLevel != actualLevel) {
-    Serial.println("New Level");
-    if (OKToChange()){
-      switchRelay(newLevel);
-    }
+  if (newLevel != actualLevel && OKToChange()) {
+    switchRelay(newLevel);
   }
 }
 
 void initializeLastSwitch() {
   for (int i = 0; i< MAX_NUMBER_OF_SWITCH_PER_MINUTE; i++){
-    lastSwitch[i] = -ONE_MINUTE_MILLIS;
+    lastSwitch[i] = -TIMEOUT_MILLIS;
   }
 }
 
@@ -60,7 +64,7 @@ short getNumberOfSwitchesLastMinute() {
   unsigned long now = millis();
   short numberOfSwitches = 0;
   for (int i = 0; i< MAX_NUMBER_OF_SWITCH_PER_MINUTE; i++){
-    if (now - lastSwitch[i] < ONE_MINUTE_MILLIS){
+    if (now - lastSwitch[i] < TIMEOUT_MILLIS){
       numberOfSwitches++;
     }
   }
@@ -114,6 +118,6 @@ void turnOffAllRelay() {
   for (int i = 0; i < NUMBER_OF_RELAYS; i++) {
     digitalWrite(RELAY_1 + i, RELAY_OFF);
   }
-  delay(100);
+  delay(100); //To be sure all relays are off before doing anything else (ex: switching an other relay on.)
   actualLevel = 0;
 }
