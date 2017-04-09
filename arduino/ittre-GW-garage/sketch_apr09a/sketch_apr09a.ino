@@ -27,11 +27,12 @@ void setup()
 void loop()
 {
     // Read digital motion value
+    digitalWrite(14, LOW);
+    delay(100);
     bool tripped = digitalRead(DIGITAL_INPUT_SENSOR) == HIGH;
 
     Serial.println(tripped);
-    send(msg.set(tripped?"1":"0"));  // Send tripped value to gw
+    digitalWrite(14, HIGH);
 
     // Sleep until interrupt comes in on motion sensor. Send update every two minute.
-    sleep(digitalPinToInterrupt(DIGITAL_INPUT_SENSOR), CHANGE, SLEEP_TIME);
 }
