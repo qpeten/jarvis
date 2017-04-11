@@ -134,7 +134,12 @@ void loop()
 }
 
 void manageLight(){
-  
+  if (garageLightStatus == ON_SHORT && abs(lastLightOn - millis()) > LIGHT_ON_SHORT_TIME) {
+    turnLightOff();
+  }
+  else if (garageLightStatus == ON_LONG && abs(lastLightOn - millis()) > LIGHT_ON_LONG_TIME) {
+    turnLightOff();
+  }
 }
 
 bool hasSwitchChanged() {
