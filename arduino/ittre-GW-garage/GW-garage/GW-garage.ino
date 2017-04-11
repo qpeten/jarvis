@@ -89,9 +89,21 @@
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define INPUT_PIN_SWITCH 2 // Pin used to detect the switch state
 #define SWITCH_CHANGE_DEBOUNCE_MILLIS 80
+#define SWITCH_MAX_TIME_BETWEEN_KNOCKS 750
+#define LIGHT_ON_LONG_TIME 60*60*1000
+#define LIGHT_ON_SHORT_TIME 60*1000
+
+typedef enum lightStatus {
+  OFF=0,
+  ON_SHORT=1,
+  ON_LONG=2
+} lightStatus;
 
 bool lastSwitchState;
+short nbrKnocks=1;
 unsigned long lastSwitchChange=0;
+unsigned long lastLightOn=0;
+lightStatus garageLightStatus = OFF;
 
 MyMessage lightGarage(CHILD_ID_LIGHT, S_BINARY);
 
@@ -118,6 +130,11 @@ void presentation()
 void loop()
 {
 	manageSwitch();
+  manageLight();
+}
+
+void manageLight(){
+  
 }
 
 bool hasSwitchChanged() {
@@ -131,16 +148,48 @@ bool hasSwitchChanged() {
 
 void manageSwitch() {
   bool switchTriggered = hasSwitchChanged();
+  
   if (switchTriggered) {
-    changeLightState();
+    turnLightOn(true);
+    manageKnocks();
+    if (nbrKnocks == 3) {
+      turnLightOn(false);
+    }
+  }  
+}
+
+void manageKnocks() {
+  if (nbrKnocks == 0) {
+    nbrKnocks = 1;
+    lastSwitchChange = millis();
+  }
+  else if (millis() - lastSwitchChange < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
+    nbrKnocks++;
+  }
+  else {
+    nbrKnocks = 0;
   }
 }
 
-void changeLightState() {
-  bool newState = !digitalRead(PIN_LIGHT_GARAGE);
+void changeLightState(bool newState) {
   digitalWrite(PIN_LIGHT_GARAGE, newState);
-  lastSwitchChange = millis();
-  send(lightGarage.set(newState));
+  saveState(PIN_LIGHT_GARAGE, newState);
+  send(lightGarage.set(newState));  
+}
+
+//onShort should be set to false if the light is supposed to stay on for a long time
+void turnLightOn(bool onShort) {
+  changeLightState(true);
+  switch (onShort) {
+    case true:  garageLightStatus = ON_SHORT;  break;
+    case false: garageLightStatus = ON_LONG;   break;
+  }
+  lastLightOn = millis();
+}
+
+void turnLightOff() {
+  changeLightState(false);
+  garageLightStatus = OFF;
 }
 
 void receive(const MyMessage &message)
