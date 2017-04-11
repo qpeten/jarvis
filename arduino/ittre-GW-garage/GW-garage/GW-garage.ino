@@ -83,15 +83,14 @@
 
 #include <MySensors.h>
 
-#define CHILD_ID_LIGHT 1 //Pin used to control the light's relay
 #define PIN_LIGHT_GARAGE 4
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define INPUT_PIN_SWITCH 2 // Pin used to detect the switch state
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 80
-#define SWITCH_MAX_TIME_BETWEEN_KNOCKS 750
-#define LIGHT_ON_LONG_TIME 60*60*1000
-#define LIGHT_ON_SHORT_TIME 60*1000
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 150
+#define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
+#define LIGHT_ON_LONG_TIME 3600000
+#define LIGHT_ON_SHORT_TIME 60000
 
 typedef enum lightStatus {
   OFF=0,
@@ -105,46 +104,49 @@ unsigned long lastSwitchChange=0;
 unsigned long lastLightOn=0;
 lightStatus garageLightStatus = OFF;
 
-MyMessage lightGarage(CHILD_ID_LIGHT, S_BINARY);
+MyMessage lightGarage(PIN_LIGHT_GARAGE, S_BINARY);
 
 void before() {
   pinMode(PIN_LIGHT_GARAGE, OUTPUT);
   digitalWrite(PIN_LIGHT_GARAGE, loadState(PIN_LIGHT_GARAGE)?RELAY_ON:RELAY_OFF);
   
-  pinMode(INPUT_PIN_SWITCH, INPUT);
+  pinMode(INPUT_PIN_SWITCH, INPUT_PULLUP);
   lastSwitchState = digitalRead(INPUT_PIN_SWITCH);
 }
 
 void setup()
 {
-	
+  
 }
 
 void presentation()
 {
-	sendSketchInfo("Relay", "1.0");
+  sendSketchInfo("Relay", "1.0");
 
   present(PIN_LIGHT_GARAGE, S_BINARY);
 }
 
 void loop()
 {
-	manageSwitch();
+  manageSwitch();
   manageLight();
 }
 
 void manageLight(){
-  if (garageLightStatus == ON_SHORT && abs(lastLightOn - millis()) > LIGHT_ON_SHORT_TIME) {
+  if (garageLightStatus == ON_SHORT && millis() - lastLightOn > LIGHT_ON_SHORT_TIME) {
+    Serial.println("Off short");
     turnLightOff();
   }
-  else if (garageLightStatus == ON_LONG && abs(lastLightOn - millis()) > LIGHT_ON_LONG_TIME) {
+  else if (garageLightStatus == ON_LONG && millis() - lastLightOn > LIGHT_ON_LONG_TIME) {
+    Serial.println("Off long");
     turnLightOff();
   }
 }
 
 bool hasSwitchChanged() {
-  if (millis() - lastSwitchState > SWITCH_CHANGE_DEBOUNCE_MILLIS &&
-      lastSwitchChange != digitalRead(INPUT_PIN_SWITCH)) {
+  
+  if (millis() - lastSwitchChange > SWITCH_CHANGE_DEBOUNCE_MILLIS &&
+      lastSwitchState != digitalRead(INPUT_PIN_SWITCH)) {
     lastSwitchState = !lastSwitchState;
     return true;
   }
@@ -153,14 +155,23 @@ bool hasSwitchChanged() {
 
 void manageSwitch() {
   bool switchTriggered = hasSwitchChanged();
-  
   if (switchTriggered) {
-    turnLightOn(true);
+    toggleGarageLight();
     manageKnocks();
     if (nbrKnocks == 3) {
+      nbrKnocks = 0;
       turnLightOn(false);
     }
   }  
+}
+
+void toggleGarageLight() {
+  if (digitalRead(PIN_LIGHT_GARAGE)) {
+    turnLightOff();
+  }
+  else {
+    turnLightOn(true);
+  }
 }
 
 void manageKnocks() {
@@ -168,7 +179,7 @@ void manageKnocks() {
     nbrKnocks = 1;
     lastSwitchChange = millis();
   }
-  else if (abs(millis() - lastSwitchChange) < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
+  else if (millis() - lastSwitchChange < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
     nbrKnocks++;
   }
   else {
@@ -179,7 +190,7 @@ void manageKnocks() {
 void changeLightState(bool newState) {
   digitalWrite(PIN_LIGHT_GARAGE, newState);
   saveState(PIN_LIGHT_GARAGE, newState);
-  send(lightGarage.set(newState));  
+  send(lightGarage.set(newState));
 }
 
 //onShort should be set to false if the light is supposed to stay on for a long time
@@ -201,16 +212,11 @@ void receive(const MyMessage &message)
 {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_STATUS) {
-    if (message.sensor == PIN_LIGHT_GARAGE) {
+    if (message.sensor == PIN_LIGHT_GARAGE) { //@@@TODO use function to toggle light
       // Change relay state
       digitalWrite(PIN_LIGHT_GARAGE, message.getBool()?RELAY_ON:RELAY_OFF);
       // Store state in eeprom
       saveState(message.sensor, message.getBool());
-      // Write some debug info
-      Serial.print("Incoming change for sensor:");
-      Serial.print(message.sensor);
-      Serial.print(", New status: ");
-      Serial.println(message.getBool());
     }
     else {
       Serial.print("Error: Received wrong sensor number.");
