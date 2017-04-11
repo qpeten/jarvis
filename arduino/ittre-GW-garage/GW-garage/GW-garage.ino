@@ -163,7 +163,7 @@ void manageKnocks() {
     nbrKnocks = 1;
     lastSwitchChange = millis();
   }
-  else if (millis() - lastSwitchChange < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
+  else if (abs(millis() - lastSwitchChange) < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
     nbrKnocks++;
   }
   else {
