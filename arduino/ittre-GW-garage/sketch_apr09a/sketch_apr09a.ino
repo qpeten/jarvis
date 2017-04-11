@@ -36,5 +36,5 @@ void loop()
       Serial.println(tripped);
       digitalWrite(LED_BUILTIN, HIGH);
     }
-    delay(100);
+    delay(1500);
 }
