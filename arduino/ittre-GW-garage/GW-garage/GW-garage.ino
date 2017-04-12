@@ -36,6 +36,10 @@
 *
 */
 
+/**
+ * This GW has also controls a GarageLight.
+ */
+
 // Enable debug prints to serial monitor
 #define MY_DEBUG
 
