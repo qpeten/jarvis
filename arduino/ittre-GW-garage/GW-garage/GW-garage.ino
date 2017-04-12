@@ -104,11 +104,11 @@ unsigned long lastSwitchChange=0;
 unsigned long lastLightOn=0;
 lightStatus garageLightStatus = OFF;
 
-MyMessage lightGarage(PIN_LIGHT_GARAGE, S_BINARY);
+MyMessage lightGarage(PIN_LIGHT_GARAGE, V_STATUS);
 
 void before() {
   pinMode(PIN_LIGHT_GARAGE, OUTPUT);
-  digitalWrite(PIN_LIGHT_GARAGE, loadState(PIN_LIGHT_GARAGE)?RELAY_ON:RELAY_OFF);
+  digitalWrite(PIN_LIGHT_GARAGE, RELAY_OFF);
   
   pinMode(INPUT_PIN_SWITCH, INPUT_PULLUP);
   lastSwitchState = digitalRead(INPUT_PIN_SWITCH);
@@ -121,7 +121,7 @@ void setup()
 
 void presentation()
 {
-  sendSketchInfo("Relay", "1.0");
+  sendSketchInfo("GarageLight", "0.1");
 
   present(PIN_LIGHT_GARAGE, S_BINARY);
 }
@@ -188,8 +188,13 @@ void manageKnocks() {
 }
 
 void changeLightState(bool newState) {
-  digitalWrite(PIN_LIGHT_GARAGE, newState);
-  saveState(PIN_LIGHT_GARAGE, newState);
+  bool toWrite;
+  switch (newState) {
+    case true:  toWrite = RELAY_ON; break;
+    case false: toWrite = RELAY_OFF;break;
+  }
+  digitalWrite(PIN_LIGHT_GARAGE, toWrite);
+  saveState(PIN_LIGHT_GARAGE, toWrite);
   send(lightGarage.set(newState));
 }
 
@@ -212,11 +217,13 @@ void receive(const MyMessage &message)
 {
   // We only expect one type of message from controller. But we better check anyway.
   if (message.type==V_STATUS) {
-    if (message.sensor == PIN_LIGHT_GARAGE) { //@@@TODO use function to toggle light
-      // Change relay state
-      digitalWrite(PIN_LIGHT_GARAGE, message.getBool()?RELAY_ON:RELAY_OFF);
-      // Store state in eeprom
-      saveState(message.sensor, message.getBool());
+    if (message.sensor == PIN_LIGHT_GARAGE) {
+      if (message.getBool()) {
+        turnLightOn(false);
+      }
+      else {
+        turnLightOff();
+      }
     }
     else {
       Serial.print("Error: Received wrong sensor number.");
