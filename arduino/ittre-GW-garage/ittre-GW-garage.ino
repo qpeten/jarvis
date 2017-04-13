@@ -91,8 +91,8 @@
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define INPUT_PIN_SWITCH 2 // Pin used to detect the switch state
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 150
-#define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 100
+#define SWITCH_MAX_TIME_BETWEEN_KNOCKS 800
 #define LIGHT_ON_LONG_TIME 3600000
 #define LIGHT_ON_SHORT_TIME 60000
 
@@ -138,11 +138,9 @@ void loop()
 
 void manageLight(){
   if (garageLightStatus == ON_SHORT && millis() - lastLightOn > LIGHT_ON_SHORT_TIME) {
-    Serial.println("Off short");
     turnLightOff();
   }
   else if (garageLightStatus == ON_LONG && millis() - lastLightOn > LIGHT_ON_LONG_TIME) {
-    Serial.println("Off long");
     turnLightOff();
   }
 }
@@ -160,9 +158,11 @@ bool hasSwitchChanged() {
 void manageSwitch() {
   bool switchTriggered = hasSwitchChanged();
   if (switchTriggered) {
-    toggleGarageLight();
     manageKnocks();
-    if (nbrKnocks == 3) {
+    if (nbrKnocks == 1) {
+      toggleGarageLight();
+    }
+    else if (nbrKnocks == 2) {
       nbrKnocks = 0;
       turnLightOn(false);
     }
