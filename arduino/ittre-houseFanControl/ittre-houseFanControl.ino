@@ -40,13 +40,14 @@ typedef enum fanSpeed {
 } fanSpeed;
 
 #define FAN_FIRST_PIN 4
-#define RELAY_ON 1  // GPIO value to write to turn on attached relay
-#define RELAY_OFF 0 // GPIO value to write to turn off attached relay
+#define RELAY_ON 0  // GPIO value to write to turn on attached relay
+#define RELAY_OFF 1 // GPIO value to write to turn off attached relay
 
 
 void before()
 {
-  //@@@TODO Set pins how they should be
+  pinMode(FAN_FIRST_PIN, OUTPUT);
+  pinMode(FAN_FIRST_PIN + 1, OUTPUT);
   setSpeed(loadState(FAN_FIRST_PIN));
 }
 
@@ -69,11 +70,25 @@ void loop()
 }
 
 void setSpeed(fanSpeed speed) {
+  digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
+  digitalWrite(FAN_FIRST_PIN + 1, RELAY_OFF);
   if (speed == AUTOMATIC) {
     Serial.println("Speed should not be automatic. Defaulting to normal speed.");
     speed = NORMAL;
   }
-  //@@@TODO
+  delay(10);
+  if (speed = MIN) {
+    digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
+    digitalWrite(FAN_FIRST_PIN + 1, RELAY_OFF);
+  }
+  else if (speed = MAX) {
+    digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
+    digitalWrite(FAN_FIRST_PIN + 1, RELAY_ON);
+  }
+  else { //Speed == normal
+    digitalWrite(FAN_FIRST_PIN, RELAY_ON);
+    digitalWrite(FAN_FIRST_PIN + 1, RELAY_OFF);
+  }
   saveState(FAN_FIRST_PIN, speed);
 }
 
