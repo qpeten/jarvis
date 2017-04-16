@@ -135,7 +135,7 @@ void presentation()
 void loop()
 {
   //manageMotion();
-  manageSwitch();
+  manageSwitchToggleOnly();
   manageLightTimer();
 }
 
@@ -162,6 +162,12 @@ bool hasSwitchChanged() {
     return true;
   }
   return false;
+}
+
+void manageSwitchToggleOnly() {
+  if (hasSwitchChanged()) {
+    toggleLight();
+  }
 }
 
 void manageSwitch() {
