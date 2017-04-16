@@ -28,7 +28,8 @@
  */
 
 // Enable debug prints
- #define MY_DEBUG
+//#define MY_DEBUG
+#define MY_REPEATER_FEATURE
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -42,12 +43,6 @@ typedef enum lightStatus {
   ON_LONG=2
 } lightStatus;
 
-bool motionSensorOn = true;
-bool lastSwitchState;
-short nbrKnocks=1;
-unsigned long lastSwitchChange=0;
-unsigned long lastLightOn=0;
-lightStatus light = OFF;
 
 #define DIGITAL_INPUT_SENSOR 3   // The digital input you attached your motion sensor.  (Only 2 and 3 generates interrupt!)
 #define PIN_LIGHT_RELAY 4
@@ -60,13 +55,20 @@ lightStatus light = OFF;
 #define LIGHT_ON_LONG_TIME 3600000
 #define LIGHT_ON_SHORT_TIME 20000
 
+bool motionSensorOn = true;
+bool lastSwitchState;
+short nbrKnocks=1;
+unsigned long lastSwitchChange=0;
+unsigned long lastLightOn=0;
+lightStatus light = OFF;
+
 // Initialize motion message
 MyMessage msg(PIN_LIGHT_RELAY, V_STATUS);
 
 void setup()
 {
   pinMode(PIN_LIGHT_RELAY, OUTPUT);
-  //@@@TODO : restore old setting
+  
   pinMode(PIN_SWITCH_INPUT, INPUT);
   pinMode(PIN_MOTION_SENSOR, INPUT);
   turnLightOff();
@@ -74,7 +76,7 @@ void setup()
 
 void presentation()
 {
-  sendSketchInfo("LightViaMotionAndSwitch", "0.1");
+  sendSketchInfo("LightViaMotionAndSwitch", "0.2");
   present(PIN_LIGHT_RELAY, S_BINARY);
   present(1, S_BINARY);
 }

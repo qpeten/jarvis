@@ -92,7 +92,7 @@
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define PIN_SWITCH_INPUT 2 // Pin used to detect the switch state
 #define PIN_MOTION_SENSOR 6
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 200
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 275
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
 #define LIGHT_ON_LONG_TIME 3600000
 #define LIGHT_ON_SHORT_TIME 60000
@@ -105,7 +105,7 @@ typedef enum lightStatus {
 
 bool motionSensorOn = true;
 bool lastSwitchState;
-short nbrKnocks=0;
+short nbrKnocks=1;
 unsigned long lastSwitchChange=0;
 unsigned long lastLightOn=0;
 lightStatus light = OFF;
@@ -128,7 +128,7 @@ void setup()
 void presentation()
 {
   sendSketchInfo("GarageLight", "0.2");
-  present(PIN_LIGHT_RELAY+200, S_BINARY);
+  present(PIN_LIGHT_RELAY+200, S_BINARY, "Lumière Garage");
   present(1+200, S_BINARY, "Is it daylight");
 }
 
@@ -158,6 +158,7 @@ bool hasSwitchChanged() {
   if (millis() - lastSwitchChange > SWITCH_CHANGE_DEBOUNCE_MILLIS &&
       lastSwitchState != digitalRead(PIN_SWITCH_INPUT)) {
     lastSwitchState = !lastSwitchState;
+		lastSwitchChange = millis();
     return true;
   }
   return false;
@@ -168,36 +169,35 @@ void manageSwitch() {
   if (switchTriggered) {
     manageKnocks();
     if (nbrKnocks == 1 &&
-        millis() - lastLightOn > SWITCH_CHANGE_DEBOUNCE_MILLIS) {
+        millis() - lastLightOn > SWITCH_CHANGE_DEBOUNCE_MILLIS) { //Avoids changing the lightstate if motion was detected just before the switch was pressed
       toggleLight();
     }
     else if (nbrKnocks == 2) {
-      nbrKnocks = 0;
+      nbrKnocks = 1;
       turnLightOn(false);
     }
   }  
 }
 
-void toggleLight() {
-  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
-    turnLightOff();
-  }
-  else {
-    turnLightOn(true);
-  }
-}
-
 void manageKnocks() {
   if (nbrKnocks == 0) {
     nbrKnocks = 1;
-    lastSwitchChange = millis();
   }
   else if (millis() - lastSwitchChange < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
     nbrKnocks++;
   }
   else {
-    nbrKnocks = 0;
+    nbrKnocks = 1;
   }
+}
+
+void toggleLight() {
+	if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
+		turnLightOff();
+	}
+	else {
+		turnLightOn(true);
+	}
 }
 
 void changeLightState(bool newState) {
