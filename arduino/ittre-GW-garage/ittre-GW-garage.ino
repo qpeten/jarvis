@@ -110,7 +110,7 @@ unsigned long lastSwitchChange=0;
 unsigned long lastLightOn=0;
 lightStatus light = OFF;
 
-MyMessage msg(PIN_LIGHT_RELAY, V_STATUS);
+MyMessage msg(PIN_LIGHT_RELAY+200, V_STATUS);
 
 void before() {
   pinMode(PIN_LIGHT_RELAY, OUTPUT);
@@ -128,13 +128,13 @@ void setup()
 void presentation()
 {
   sendSketchInfo("GarageLight", "0.2");
-
-  present(PIN_LIGHT_RELAY, S_BINARY);
+  present(PIN_LIGHT_RELAY+200, S_BINARY);
+  present(1+200, S_BINARY, "Is it daylight");
 }
 
 void loop()
 {
-  manageMotion();
+  //manageMotion();
   manageSwitch();
   manageLightTimer();
 }
@@ -235,13 +235,16 @@ void turnLightOff() {
 void receive(const MyMessage &message)
 {
   if (message.type==V_STATUS) {
-    if (message.sensor == PIN_LIGHT_RELAY) {
+    if (message.sensor == PIN_LIGHT_RELAY+200) {
       if (message.getBool()) {
         turnLightOn(false);
       }
       else {
         turnLightOff();
       }
+    }
+    else if (message.sensor == 1+200) {
+      motionSensorOn = message.getBool();
     }
     else {
       Serial.print("Error: Received wrong sensor number.");
