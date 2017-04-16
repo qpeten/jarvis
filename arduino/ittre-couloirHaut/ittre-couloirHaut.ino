@@ -28,7 +28,7 @@
  */
 
 // Enable debug prints
-// #define MY_DEBUG
+ #define MY_DEBUG
 
 // Enable and select radio type attached
 #define MY_RADIO_NRF24
@@ -42,6 +42,7 @@ typedef enum lightStatus {
   ON_LONG=2
 } lightStatus;
 
+bool motionSensorOn = true;
 bool lastSwitchState;
 short nbrKnocks=1;
 unsigned long lastSwitchChange=0;
@@ -52,12 +53,12 @@ lightStatus light = OFF;
 #define PIN_LIGHT_RELAY 4
 #define PIN_SWITCH_INPUT 5
 #define PIN_MOTION_SENSOR 6
-#define RELAY_ON 1  // GPIO value to write to turn on attached relay
-#define RELAY_OFF 0 // GPIO value to write to turn off attached relay
+#define RELAY_ON 0  // GPIO value to write to turn on attached relay
+#define RELAY_OFF 1 // GPIO value to write to turn off attached relay
 #define SWITCH_CHANGE_DEBOUNCE_MILLIS 100
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 800
 #define LIGHT_ON_LONG_TIME 3600000
-#define LIGHT_ON_SHORT_TIME 60000
+#define LIGHT_ON_SHORT_TIME 20000
 
 // Initialize motion message
 MyMessage msg(PIN_LIGHT_RELAY, V_STATUS);
@@ -68,24 +69,27 @@ void setup()
   //@@@TODO : restore old setting
   pinMode(PIN_SWITCH_INPUT, INPUT);
   pinMode(PIN_MOTION_SENSOR, INPUT);
+  turnLightOff();
 }
 
 void presentation()
 {
   sendSketchInfo("LightViaMotionAndSwitch", "0.1");
   present(PIN_LIGHT_RELAY, S_BINARY);
+  present(1, S_BINARY);
 }
 
 void loop()
 {
   manageMotion();
-  manageSwitch();
+  //manageSwitch();
   manageLightTimer();
 }
 
 void manageMotion() {
-  bool motion = digitalRead(PIN_MOTION_SENSOR) == HIGH;
-  turnLightOn(true);
+  if (motionSensorOn && digitalRead(PIN_MOTION_SENSOR)) {
+    turnLightOn(true);
+  }
 }
 
 void manageSwitch() {
@@ -94,7 +98,7 @@ void manageSwitch() {
     manageKnocks();
     if (nbrKnocks == 1 &&
         millis() - lastLightOn > SWITCH_CHANGE_DEBOUNCE_MILLIS) {
-      toggleGarageLight();
+      toggleLight();
     }
     else if (nbrKnocks == 2) {
       nbrKnocks = 0;
@@ -113,7 +117,6 @@ void manageLightTimer(){
 }
 
 bool hasSwitchChanged() {
-  
   if (millis() - lastSwitchChange > SWITCH_CHANGE_DEBOUNCE_MILLIS &&
       lastSwitchState != digitalRead(PIN_SWITCH_INPUT)) {
     lastSwitchState = !lastSwitchState;
@@ -135,8 +138,8 @@ void manageKnocks() {
   }
 }
 
-void toggleGarageLight() {
-  if (digitalRead(PIN_LIGHT_RELAY)) {
+void toggleLight() {
+  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
     turnLightOff();
   }
   else {
@@ -157,15 +160,42 @@ void changeLightState(bool newState) {
 
 //onShort should be set to false if the light is supposed to stay on for a long time
 void turnLightOn(bool onShort) {
-  changeLightState(true);
-  switch (onShort) {
-    case true:  light = ON_SHORT;  break;
-    case false: light = ON_LONG;   break;
+  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_OFF) { //Avoid sending repeated messages when detecting motion; but still update lastLightOn
+    changeLightState(true);
+  }
+  if (onShort && light != ON_LONG) { //Avoid interrupting ON_LONG when sensing motion
+    light = ON_SHORT;
+  }
+  else if (!onShort) {
+    light = ON_LONG;
   }
   lastLightOn = millis();
 }
 
 void turnLightOff() {
-  changeLightState(false);
+  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
+    changeLightState(false);
+  }
   light = OFF;
+}
+
+void receive(const MyMessage &message)
+{
+  // We only expect one type of message from controller. But we better check anyway.
+  if (message.type==V_STATUS) {
+    if (message.sensor == PIN_LIGHT_RELAY) {
+      if (message.getBool()) {
+        turnLightOn(false);
+      }
+      else {
+        turnLightOff();
+      }
+    }
+    else if (message.sensor == 1) {
+      motionSensorOn = message.getBool();
+    }
+    else {
+      Serial.print("Error: Received wrong sensor number.");
+    }
+  }
 }
