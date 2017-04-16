@@ -48,6 +48,7 @@ typedef enum lightStatus {
 #define PIN_LIGHT_RELAY 4
 #define PIN_SWITCH_INPUT 5
 #define PIN_MOTION_SENSOR 6
+#define SENSOR_ID_DAYLIGHT 201
 #define RELAY_ON 0  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 1 // GPIO value to write to turn off attached relay
 #define SWITCH_CHANGE_DEBOUNCE_MILLIS 100
@@ -77,8 +78,8 @@ void setup()
 void presentation()
 {
   sendSketchInfo("LightViaMotionAndSwitch", "0.2");
-  present(PIN_LIGHT_RELAY, S_BINARY);
-  present(1, S_BINARY);
+  present(PIN_LIGHT_RELAY, S_BINARY, "Lumière couloir haut");
+  present(SENSOR_ID_DAYLIGHT, S_BINARY, "Is light on");
 }
 
 void loop()
@@ -193,11 +194,12 @@ void receive(const MyMessage &message)
         turnLightOff();
       }
     }
-    else if (message.sensor == 1) {
+    else if (message.sensor == SENSOR_ID_DAYLIGHT) {
       motionSensorOn = message.getBool();
+      Serial.println(message.getBool());
     }
     else {
-      Serial.print("Error: Received wrong sensor number.");
+      Serial.println("Error: Received wrong sensor number.");
     }
   }
 }
