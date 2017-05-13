@@ -28,7 +28,7 @@
 //#define MY_RADIO_RFM69
 
 // Enable repeater functionality for this node
-#define MY_REPEATER_FEATURE
+//#define MY_REPEATER_FEATURE
 
 #include <MySensors.h>
 
@@ -42,6 +42,7 @@ typedef enum fanSpeed {
 #define FAN_FIRST_PIN 4
 #define RELAY_ON 0  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 1 // GPIO value to write to turn off attached relay
+#define DEFAULT_SPEED MIN
 
 
 void before()
@@ -60,7 +61,7 @@ void presentation()
 {
 	// Send the sketch version information to the gateway and Controller
 	sendSketchInfo("houseFanControl", "0.1");
-	present(FAN_FIRST_PIN, S_HVAC);
+	present(FAN_FIRST_PIN, S_DIMMER);
 }
 
 
@@ -70,18 +71,15 @@ void loop()
 }
 
 void setSpeed(fanSpeed speed) {
-  digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
-  digitalWrite(FAN_FIRST_PIN + 1, RELAY_OFF);
   if (speed == AUTOMATIC) {
-    Serial.println("Speed should not be automatic. Defaulting to normal speed.");
-    speed = NORMAL;
+    Serial.println("Speed should not be automatic. Defaulting speed.");
+    speed = DEFAULT_SPEED;
   }
-  delay(10);
-  if (speed = MIN) {
+  if (speed == MIN) {
     digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
     digitalWrite(FAN_FIRST_PIN + 1, RELAY_OFF);
   }
-  else if (speed = MAX) {
+  else if (speed == MAX) {
     digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
     digitalWrite(FAN_FIRST_PIN + 1, RELAY_ON);
   }
@@ -95,9 +93,14 @@ void setSpeed(fanSpeed speed) {
 void receive(const MyMessage &message)
 {
 	// We only expect one type of message from controller. But we better check anyway.
-	if (message.type==V_HVAC_SPEED) {
-    Serial.println(message.getInt());
-    //setSpeed(message.getInt());
+	if (message.type==V_PERCENTAGE) {
+    setSpeed(percentageToFanSpeed(message.getInt()));
 	}
+}
+
+fanSpeed percentageToFanSpeed(int percentage) {
+  if (percentage == 0)
+    return 0;
+  return (fanSpeed) ((percentage/33) + 1);
 }
 
