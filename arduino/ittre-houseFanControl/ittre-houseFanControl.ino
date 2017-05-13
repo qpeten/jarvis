@@ -72,9 +72,9 @@ void loop()
 
 void setSpeed(fanSpeed speed) {
   if (speed == AUTOMATIC) {
-    Serial.println("Speed should not be automatic. Defaulting speed.");
     speed = DEFAULT_SPEED;
   }
+  
   if (speed == MIN) {
     digitalWrite(FAN_FIRST_PIN, RELAY_OFF);
     digitalWrite(FAN_FIRST_PIN + 1, RELAY_OFF);
@@ -96,11 +96,17 @@ void receive(const MyMessage &message)
 	if (message.type==V_PERCENTAGE) {
     setSpeed(percentageToFanSpeed(message.getInt()));
 	}
+  Serial.println(message.type);
 }
 
 fanSpeed percentageToFanSpeed(int percentage) {
   if (percentage == 0)
-    return 0;
-  return (fanSpeed) ((percentage/33) + 1);
+    return 1;
+  else if (percentage >= 66)
+    return 2;
+  else if (percentage >= 33)
+    return 3;
+  else
+    return 1;
 }
 
