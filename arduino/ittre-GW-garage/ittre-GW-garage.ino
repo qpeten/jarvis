@@ -41,7 +41,7 @@
  */
 
 // Enable debug prints to serial monitor
-#define MY_DEBUG
+//#define MY_DEBUG
 
 
 // Enable and select radio type attached
@@ -88,6 +88,9 @@
 #include <MySensors.h>
 
 #define PIN_LIGHT_RELAY 4
+#define PIN_BOILER_PARENTS_RELAY 5
+#define PIN_BOILER_AYMERIC_RELAY 6
+#define CHILD_SENSOR_ID_MOTION_ON 1
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define PIN_SWITCH_INPUT 2 // Pin used to detect the switch state
@@ -114,7 +117,11 @@ MyMessage msg(PIN_LIGHT_RELAY+200, V_STATUS);
 
 void before() {
   pinMode(PIN_LIGHT_RELAY, OUTPUT);
+  pinMode(PIN_BOILER_PARENTS_RELAY, OUTPUT);
+  pinMode(PIN_BOILER_AYMERIC_RELAY, OUTPUT);
   digitalWrite(PIN_LIGHT_RELAY, RELAY_OFF);
+  digitalWrite(PIN_BOILER_PARENTS_RELAY, loadState(PIN_BOILER_PARENTS_RELAY));
+  digitalWrite(PIN_BOILER_AYMERIC_RELAY, loadState(PIN_BOILER_AYMERIC_RELAY));
   
   pinMode(PIN_SWITCH_INPUT, INPUT_PULLUP);
   lastSwitchState = digitalRead(PIN_SWITCH_INPUT);
@@ -127,9 +134,11 @@ void setup()
 
 void presentation()
 {
-  sendSketchInfo("GarageLight", "0.2");
-  present(PIN_LIGHT_RELAY+200, S_BINARY, "Lumière Garage");
-  present(1+200, S_BINARY, "Is it daylight");
+  sendSketchInfo("GarageLight", "0.3");
+  present(getChildSensorIDForGW(PIN_LIGHT_RELAY), S_BINARY, "Lumière Garage");
+	present(getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY), "Boiler Parents");
+	present(getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY), "Boiler Aymeric");
+  present(getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON), S_BINARY, "Is it daylight");
 }
 
 void loop()
@@ -213,7 +222,7 @@ void changeLightState(bool newState) {
     case false: toWrite = RELAY_OFF;break;
   }
   digitalWrite(PIN_LIGHT_RELAY, toWrite);
-  saveState(PIN_LIGHT_RELAY, toWrite);
+  //saveState(PIN_LIGHT_RELAY, toWrite);
   send(msg.set(newState));
 }
 
@@ -238,10 +247,19 @@ void turnLightOff() {
   light = OFF;
 }
 
+uint8_t getChildSensorIDForGW(uint8_t sensorID) {
+  return 200+sensorID;
+}
+
+void setRelay(uint8_t pin, bool value) {
+	digitalWrite(pin, value ? RELAY_ON : RELAY_OFF);
+	saveState(pin, value);
+}
+
 void receive(const MyMessage &message)
 {
   if (message.type==V_STATUS) {
-    if (message.sensor == PIN_LIGHT_RELAY+200) {
+    if (message.sensor == getChildSensorIDForGW(PIN_LIGHT_RELAY)) {
       if (message.getBool()) {
         turnLightOn(false);
       }
@@ -249,7 +267,13 @@ void receive(const MyMessage &message)
         turnLightOff();
       }
     }
-    else if (message.sensor == 1+200) {
+		else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY)) {
+			setRelay(PIN_BOILER_PARENTS_RELAY, message.getBool());
+		}
+		else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY)) {
+			setRelay(PIN_BOILER_AYMERIC_RELAY, message.getBool());
+		}
+    else if (message.sensor == getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON)) {
       motionSensorOn = message.getBool();
     }
     else {
