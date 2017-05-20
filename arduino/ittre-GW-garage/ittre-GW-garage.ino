@@ -136,8 +136,8 @@ void presentation()
 {
   sendSketchInfo("GarageLight", "0.3");
   present(getChildSensorIDForGW(PIN_LIGHT_RELAY), S_BINARY, "Lumière Garage");
-	present(getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY), "Boiler Parents");
-	present(getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY), "Boiler Aymeric");
+	present(getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY), S_BINARY, "Boiler Parents");
+	present(getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY), S_BINARY, "Boiler Aymeric");
   present(getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON), S_BINARY, "Is it daylight");
 }
 
