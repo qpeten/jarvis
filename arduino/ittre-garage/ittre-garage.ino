@@ -53,7 +53,7 @@
 #define MY_RF24_PA_LEVEL RF24_PA_LOW
 
 // Enable serial gateway
-#define MY_GATEWAY_SERIAL
+//#define MY_GATEWAY_SERIAL
 
 // Define a lower baud rate for Arduino's running on 8 MHz (Arduino Pro Mini 3.3V & SenseBender)
 #if F_CPU == 8000000L
@@ -61,7 +61,7 @@
 #endif
 
 // Enable inclusion mode
-#define MY_INCLUSION_MODE_FEATURE
+//#define MY_INCLUSION_MODE_FEATURE
 // Enable Inclusion mode button on gateway
 //#define MY_INCLUSION_BUTTON_FEATURE
 
@@ -69,12 +69,12 @@
 //#define MY_INCLUSION_BUTTON_EXTERNAL_PULLUP
 
 // Set inclusion mode duration (in seconds)
-#define MY_INCLUSION_MODE_DURATION 60
+//#define MY_INCLUSION_MODE_DURATION 60
 // Digital pin used for inclusion mode button
 //#define MY_INCLUSION_MODE_BUTTON_PIN  3
 
 // Set blinking period
-#define MY_DEFAULT_LED_BLINK_PERIOD 300
+//#define MY_DEFAULT_LED_BLINK_PERIOD 300
 
 // Inverses the behavior of leds
 //#define MY_WITH_LEDS_BLINKING_INVERSE
@@ -106,7 +106,7 @@ typedef enum lightStatus {
   ON_LONG=2
 } lightStatus;
 
-bool motionSensorOn = true;
+//bool motionSensorOn = true;
 bool lastSwitchState;
 short nbrKnocks=1;
 unsigned long lastSwitchChange=0;
@@ -138,20 +138,13 @@ void presentation()
   present(getChildSensorIDForGW(PIN_LIGHT_RELAY), S_BINARY, "Lumière Garage");
 	present(getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY), S_BINARY, "Boiler Parents");
 	present(getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY), S_BINARY, "Boiler Aymeric");
-  present(getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON), S_BINARY, "Is it daylight");
+//  present(getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON), S_BINARY, "Is it daylight");
 }
 
 void loop()
 {
-  //manageMotion();
   manageSwitchToggleOnly();
   manageLightTimer();
-}
-
-void manageMotion() {
-  if (motionSensorOn && digitalRead(PIN_MOTION_SENSOR)) {
-    turnLightOn(true);
-  }
 }
 
 void manageLightTimer(){
@@ -273,9 +266,6 @@ void receive(const MyMessage &message)
 		else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY)) {
 			setRelay(PIN_BOILER_AYMERIC_RELAY, message.getBool());
 		}
-    else if (message.sensor == getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON)) {
-      motionSensorOn = message.getBool();
-    }
     else {
       Serial.print("Error: Received wrong sensor number.");
     }
