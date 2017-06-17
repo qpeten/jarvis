@@ -98,17 +98,19 @@ void receive(const MyMessage &message)
 	if (message.type==V_PERCENTAGE) {
     setSpeed(percentageToFanSpeed(message.getInt()));
 	}
-  Serial.println(message.type);
+  //Serial.println(message.type);
 }
 
 fanSpeed percentageToFanSpeed(int percentage) {
+  Serial.print("Received : ");
+  Serial.println(percentage);
   if (percentage == 0)
-    return 1;
+    return (fanSpeed) 1;
   else if (percentage >= 66)
-    return 2;
+    return (fanSpeed) 2;
   else if (percentage >= 33)
-    return 3;
+    return (fanSpeed) 3;
   else
-    return 1;
+    return (fanSpeed) 1;
 }
 
