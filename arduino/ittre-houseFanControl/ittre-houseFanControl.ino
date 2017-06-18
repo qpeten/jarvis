@@ -30,7 +30,7 @@
 //#define MY_RADIO_RFM69
 
 // Enable repeater functionality for this node
-//#define MY_REPEATER_FEATURE
+#define MY_REPEATER_FEATURE
 
 #include <MySensors.h>
 
