@@ -94,11 +94,9 @@ void setSpeed(fanSpeed speed) {
 
 void receive(const MyMessage &message)
 {
-	// We only expect one type of message from controller. But we better check anyway.
-	if (message.type==V_PERCENTAGE) {
+	if (message.sensor==FAN_FIRST_PIN) {
     setSpeed(percentageToFanSpeed(message.getInt()));
 	}
-  //Serial.println(message.type);
 }
 
 fanSpeed percentageToFanSpeed(int percentage) {
