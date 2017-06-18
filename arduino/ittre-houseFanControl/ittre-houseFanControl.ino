@@ -94,7 +94,7 @@ void setSpeed(fanSpeed speed) {
 
 void receive(const MyMessage &message)
 {
-	if (message.sensor==FAN_FIRST_PIN) {
+	if (message.destination==MY_NODE_ID && message.sensor==FAN_FIRST_PIN) {
     setSpeed(percentageToFanSpeed(message.getInt()));
 	}
 }
