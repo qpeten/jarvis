@@ -19,44 +19,27 @@
  *******************************
  *
  * REVISION HISTORY
- * Version 1.0 - Henrik Ekblad
+ * Version 1.0 - Henrik EKblad
+ * Contribution by a-lurker and Anticimex,
+ * Contribution by Norbert Truchsess <norbert.truchsess@t-online.de>
+ * Contribution by Tomas Hozza <thozza@gmail.com>
+ *
  *
  * DESCRIPTION
- * The W5100 MQTT gateway sends radio network (or locally attached sensors) data to your MQTT broker.
- * The node also listens to MY_MQTT_TOPIC_PREFIX and sends out those messages to the radio network
+ * The EthernetGateway sends data received from sensors to the ethernet link.
+ * The gateway also accepts input on ethernet interface, which is then sent out to the radio network.
+ *
+ * The GW code is designed for Arduino 328p / 16MHz.  ATmega168 does not have enough memory to run this program.
  *
  * LED purposes:
- * - To use the feature, uncomment WITH_LEDS_BLINKING in MyConfig.h
+ * - To use the feature, uncomment MY_DEFAULT_xxx_LED_PIN in the sketch below
  * - RX (green) - blink fast on radio message recieved. In inclusion mode will blink fast only on presentation recieved
  * - TX (yellow) - blink fast on radio message transmitted. In inclusion mode will blink slowly
  * - ERR (red) - fast blink on error during transmission error or recieve crc error
  *
- * See http://www.mysensors.org/build/esp8266_gateway for wiring instructions.
- * nRF24L01+  ESP8266
- * VCC        VCC
- * CE         GPIO4
- * CSN/CS     GPIO15
- * SCK        GPIO14
- * MISO       GPIO12
- * MOSI       GPIO13
+ * See http://www.mysensors.org/build/ethernet_gateway for wiring instructions.
  *
- * Not all ESP8266 modules have all pins available on their external interface.
- * This code has been tested on an ESP-12 module.
- * The ESP8266 requires a certain pin configuration to download code, and another one to run code:
- * - Connect REST (reset) via 10K pullup resistor to VCC, and via switch to GND ('reset switch')
- * - Connect GPIO15 via 10K pulldown resistor to GND
- * - Connect CH_PD via 10K resistor to VCC
- * - Connect GPIO2 via 10K resistor to VCC
- * - Connect GPIO0 via 10K resistor to VCC, and via switch to GND ('bootload switch')
- *
-  * Inclusion mode button:
- * - Connect GPIO5 via switch to GND ('inclusion switch')
- *
- * Hardware SHA204 signing is currently not supported!
- *
- * Make sure to fill in your ssid and WiFi password below for ssid & pass.
  */
-
 
 // Enable debug prints to serial monitor
 #define MY_DEBUG
@@ -65,14 +48,8 @@
 #define MY_RADIO_NRF24
 //#define MY_RADIO_RFM69
 
-#define MY_GATEWAY_MQTT_CLIENT
-
-// Set this node's subscribe and publish topic prefix
-#define MY_MQTT_PUBLISH_TOPIC_PREFIX "chQt-out"
-#define MY_MQTT_SUBSCRIBE_TOPIC_PREFIX "chQt-in"
-
-// Set MQTT client id
-#define MY_MQTT_CLIENT_ID "mysensors-chQt"
+// Enable gateway ethernet module type
+#define MY_GATEWAY_W5100
 
 // W5100 Ethernet module SPI enable (optional if using a shield/module that manages SPI_EN signal)
 //#define MY_W5100_SPI_EN 4
@@ -95,25 +72,25 @@
 #define MY_RF24_CS_PIN 6
 #endif
 
-// Enable these if your MQTT broker requires usenrame/password
-//#define MY_MQTT_USER "username"
-//#define MY_MQTT_PASSWORD "password"
+// Enable to UDP
+//#define MY_USE_UDP
 
 // Enable MY_IP_ADDRESS here if you want a static ip address (no DHCP)
-#define MY_IP_ADDRESS 192,168,1,47
+#define MY_IP_ADDRESS 192,168,1,47     // If this is disabled, DHCP is used to retrieve address
+                                       // Renewal period if using DHCP
+                                       //#define MY_IP_RENEWAL_INTERVAL 60000
+                                       // The port to keep open on node server mode / or port to contact in client mode
+#define MY_PORT 5003
 
-// If using static ip you can define Gateway and Subnet address as well
-#define MY_IP_GATEWAY_ADDRESS 192,168,1,1
-#define MY_IP_SUBNET_ADDRESS 255,255,255,0
+// Controller ip address. Enables client mode (default is "server" mode).
+// Also enable this if MY_USE_UDP is used and you want sensor data sent somewhere.
+//#define MY_CONTROLLER_IP_ADDRESS 192, 168, 178, 254
 
-// MQTT broker ip address or url. Define one or the other.
-//#define MY_CONTROLLER_URL_ADDRESS "m20.cloudmqtt.com"
-#define MY_CONTROLLER_IP_ADDRESS 192, 168, 1,200
+// The MAC address can be anything you want but should be unique on your network.
+// Newer boards have a MAC address printed on the underside of the PCB, which you can (optionally) use.
+// Note that most of the Ardunio examples use  "DEAD BEEF FEED" for the MAC address.
+#define MY_MAC_ADDRESS 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED
 
-// The MQTT broker port to to open
-#define MY_PORT 1883
-
-/*
 // Enable inclusion mode
 #define MY_INCLUSION_MODE_FEATURE
 // Enable Inclusion mode button on gateway
@@ -128,13 +105,17 @@
 
 // Flash leds on rx/tx/err
 // Uncomment to override default HW configurations
-//#define MY_DEFAULT_ERR_LED_PIN 16  // Error led pin
-//#define MY_DEFAULT_RX_LED_PIN  16  // Receive led pin
-//#define MY_DEFAULT_TX_LED_PIN  16  // the PCB, on board LED
-*/
+//#define MY_DEFAULT_ERR_LED_PIN 7  // Error led pin
+//#define MY_DEFAULT_RX_LED_PIN  8  // Receive led pin
+//#define MY_DEFAULT_TX_LED_PIN  9  // Transmit led pin
 
+
+#if defined(MY_USE_UDP)
+#include <EthernetUdp.h>
+#endif
 #include <Ethernet.h>
 #include <MySensors.h>
+
 
 void setup()
 {
