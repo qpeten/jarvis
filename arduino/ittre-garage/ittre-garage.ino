@@ -69,10 +69,10 @@
 #define PIN_CURRENT_SENSOR 14
 #define CURRENT_SENSOR_THRES_DOWN 507
 #define CURRENT_SENSOR_THRES_UP 516
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 275
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 100
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
 #define LIGHT_ON_LONG_TIME 3600000
-#define LIGHT_ON_SHORT_TIME 60000
+#define LIGHT_ON_SHORT_TIME  60000
 
 typedef enum lightStatus {
   OFF=0,
@@ -119,7 +119,7 @@ void presentation()
 void loop()
 {
   manageCurrentSensor();
-  manageSwitchToggleOnly();
+  manageSwitch();
   manageLightTimer();
 }
 
@@ -130,8 +130,8 @@ void manageCurrentSensor() {
 }
 
 bool currentSensorTriggered() {
-  unsigned int sensorValue = analogRead(PIN_CURRENT_SENSOR);
-  return sensorValue > CURRENT_SENSOR_THRES_UP || sensorValue < CURRENT_SENSOR_THRES_DOWN;
+  unsigned int val = analogRead(PIN_CURRENT_SENSOR);
+  return val > CURRENT_SENSOR_THRES_UP || val < CURRENT_SENSOR_THRES_DOWN;
 }
 
 void manageLightTimer(){
@@ -144,9 +144,10 @@ void manageLightTimer(){
 }
 
 bool hasSwitchChanged() {
+	bool currentSwitchState = digitalRead(PIN_SWITCH_INPUT);
   if (millis() - lastSwitchChange > SWITCH_CHANGE_DEBOUNCE_MILLIS &&
-      lastSwitchState != digitalRead(PIN_SWITCH_INPUT)) {
-    lastSwitchState = !lastSwitchState;
+      lastSwitchState != currentSwitchState) {
+    lastSwitchState = currentSwitchState;
     lastSwitchChange = millis();
     return true;
   }
