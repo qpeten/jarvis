@@ -69,7 +69,7 @@
 #define PIN_CURRENT_SENSOR 14
 #define CURRENT_SENSOR_THRES_DOWN 507
 #define CURRENT_SENSOR_THRES_UP 516
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 100
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 275
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
 #define LIGHT_ON_LONG_TIME 3600000
 #define LIGHT_ON_SHORT_TIME  60000
@@ -82,7 +82,7 @@ typedef enum lightStatus {
 
 //bool motionSensorOn = true;
 bool lastSwitchState;
-short nbrKnocks=1;
+short nbrKnocks=0;
 unsigned long lastSwitchChange=0;
 unsigned long lastLightOn=0;
 lightStatus light = OFF;
@@ -164,12 +164,12 @@ void manageSwitch() {
   bool switchTriggered = hasSwitchChanged();
   if (switchTriggered) {
     manageKnocks();
-    if (nbrKnocks == 1 &&
+    if ((nbrKnocks == 1 || nbrKnocks == 0) &&
         millis() - lastLightOn > SWITCH_CHANGE_DEBOUNCE_MILLIS) { //Avoids changing the lightstate if motion was detected just before the switch was pressed
       toggleLight();
     }
     else if (nbrKnocks == 2) {
-      nbrKnocks = 1;
+      nbrKnocks = 0;
       turnLightOn(false);
     }
   }  
@@ -179,12 +179,13 @@ void manageKnocks() {
   if (nbrKnocks == 0) {
     nbrKnocks = 1;
   }
-  else if (millis() - lastSwitchChange < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
+  else if (millis() - lastLightOn < SWITCH_MAX_TIME_BETWEEN_KNOCKS*nbrKnocks) {
     nbrKnocks++;
   }
   else {
-    nbrKnocks = 1;
+    nbrKnocks = 0;
   }
+  Serial.println(nbrKnocks);
 }
 
 void toggleLight() {
