@@ -63,11 +63,12 @@
 #define PIN_LIGHT_RELAY 4
 #define PIN_BOILER_PARENTS_RELAY 5
 #define PIN_BOILER_AYMERIC_RELAY 6
-#define CHILD_SENSOR_ID_MOTION_ON 1
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define PIN_SWITCH_INPUT 2 // Pin used to detect the switch state
-#define PIN_MOTION_SENSOR 6
+#define PIN_CURRENT_SENSOR 14
+#define CURRENT_SENSOR_THRES_DOWN 507
+#define CURRENT_SENSOR_THRES_UP 516
 #define SWITCH_CHANGE_DEBOUNCE_MILLIS 275
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
 #define LIGHT_ON_LONG_TIME 3600000
@@ -92,12 +93,14 @@ void before() {
   pinMode(PIN_LIGHT_RELAY, OUTPUT);
   pinMode(PIN_BOILER_PARENTS_RELAY, OUTPUT);
   pinMode(PIN_BOILER_AYMERIC_RELAY, OUTPUT);
+  pinMode(PIN_CURRENT_SENSOR, INPUT);
   digitalWrite(PIN_LIGHT_RELAY, RELAY_OFF);
-	digitalWrite(PIN_BOILER_PARENTS_RELAY, loadState(PIN_BOILER_PARENTS_RELAY) ? RELAY_ON : RELAY_OFF);
+  digitalWrite(PIN_BOILER_PARENTS_RELAY, loadState(PIN_BOILER_PARENTS_RELAY) ? RELAY_ON : RELAY_OFF);
   digitalWrite(PIN_BOILER_AYMERIC_RELAY, loadState(PIN_BOILER_AYMERIC_RELAY) ? RELAY_ON : RELAY_OFF);
   
   pinMode(PIN_SWITCH_INPUT, INPUT_PULLUP);
   lastSwitchState = digitalRead(PIN_SWITCH_INPUT);
+  
 }
 
 void setup()
@@ -108,16 +111,27 @@ void setup()
 void presentation()
 {
   sendSketchInfo("GarageLight", "0.3");
-  present(getChildSensorIDForGW(PIN_LIGHT_RELAY), S_BINARY, "Lumière Garage");
-	present(getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY), S_BINARY, "Boiler Parents");
-	present(getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY), S_BINARY, "Boiler Aymeric");
-//  present(getChildSensorIDForGW(CHILD_SENSOR_ID_MOTION_ON), S_BINARY, "Is it daylight");
+  present(getChildSensorIDForGW(PIN_LIGHT_RELAY), S_BINARY, "Lumiere Garage");
+  present(getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY), S_BINARY, "Boiler Parents");
+  present(getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY), S_BINARY, "Boiler Aymeric");
 }
 
 void loop()
 {
+  manageCurrentSensor();
   manageSwitchToggleOnly();
   manageLightTimer();
+}
+
+void manageCurrentSensor() {
+  if (currentSensorTriggered()) {
+    turnLightOn(true);
+  }
+}
+
+bool currentSensorTriggered() {
+  unsigned int sensorValue = analogRead(PIN_CURRENT_SENSOR);
+  return sensorValue > CURRENT_SENSOR_THRES_UP || sensorValue < CURRENT_SENSOR_THRES_DOWN;
 }
 
 void manageLightTimer(){
@@ -133,7 +147,7 @@ bool hasSwitchChanged() {
   if (millis() - lastSwitchChange > SWITCH_CHANGE_DEBOUNCE_MILLIS &&
       lastSwitchState != digitalRead(PIN_SWITCH_INPUT)) {
     lastSwitchState = !lastSwitchState;
-		lastSwitchChange = millis();
+    lastSwitchChange = millis();
     return true;
   }
   return false;
@@ -173,12 +187,12 @@ void manageKnocks() {
 }
 
 void toggleLight() {
-	if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
-		turnLightOff();
-	}
-	else {
-		turnLightOn(true);
-	}
+  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
+    turnLightOff();
+  }
+  else {
+    turnLightOn(true);
+  }
 }
 
 void changeLightState(bool newState) {
@@ -194,16 +208,20 @@ void changeLightState(bool newState) {
 
 //onShort should be set to false if the light is supposed to stay on for a long time
 void turnLightOn(bool onShort) {
-  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_OFF) { //Avoid sending repeated messages when detecting motion; but still update lastLightOn
+  if (onShort) {
+    if (light != ON_LONG) {
+      if (digitalRead(PIN_LIGHT_RELAY) == RELAY_OFF) { //Avoid sending repeated messages when detecting motion; but still update lastLightOn
+        changeLightState(true);
+        light = ON_SHORT;
+      }
+      lastLightOn = millis();
+    }
+  }
+  else {
     changeLightState(true);
-  }
-  if (onShort && light != ON_LONG) { //Avoid interrupting ON_LONG when sensing motion
-    light = ON_SHORT;
-  }
-  else if (!onShort) {
     light = ON_LONG;
+    lastLightOn = millis();
   }
-  lastLightOn = millis();
 }
 
 void turnLightOff() {
@@ -218,8 +236,8 @@ uint8_t getChildSensorIDForGW(uint8_t sensorID) {
 }
 
 void setRelay(uint8_t pin, bool value) {
-	digitalWrite(pin, value ? RELAY_ON : RELAY_OFF);
-	saveState(pin, value);
+  digitalWrite(pin, value ? RELAY_ON : RELAY_OFF);
+  saveState(pin, value);
 }
 
 void receive(const MyMessage &message)
@@ -233,14 +251,15 @@ void receive(const MyMessage &message)
         turnLightOff();
       }
     }
-		else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY)) {
-			setRelay(PIN_BOILER_PARENTS_RELAY, message.getBool());
-		}
-		else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY)) {
-			setRelay(PIN_BOILER_AYMERIC_RELAY, message.getBool());
-		}
+    else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_PARENTS_RELAY)) {
+      setRelay(PIN_BOILER_PARENTS_RELAY, message.getBool());
+    }
+    else if (message.sensor == getChildSensorIDForGW(PIN_BOILER_AYMERIC_RELAY)) {
+      setRelay(PIN_BOILER_AYMERIC_RELAY, message.getBool());
+    }
     else {
       Serial.print("Error: Received wrong sensor number.");
     }
   }
 }
+
