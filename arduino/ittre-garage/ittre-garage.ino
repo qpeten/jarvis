@@ -67,9 +67,9 @@
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define PIN_SWITCH_INPUT 2 // Pin used to detect the switch state
 #define PIN_CURRENT_SENSOR 14
-#define CURRENT_SENSOR_THRES_DOWN 507
-#define CURRENT_SENSOR_THRES_UP 516
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 275
+#define CURRENT_SENSOR_THRES_DOWN 502  //Original : 507
+#define CURRENT_SENSOR_THRES_UP 521    //Original : 516
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 350   //Original 275
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
 #define LIGHT_ON_LONG_TIME 3600000
 #define LIGHT_ON_SHORT_TIME  60000
