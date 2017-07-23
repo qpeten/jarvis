@@ -67,10 +67,9 @@
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define PIN_SWITCH_INPUT 2 // Pin used to detect the switch state
 #define PIN_CURRENT_SENSOR 14
-#define CURRENT_SENSOR_THRES_DOWN 507  //Original : 507
-#define CURRENT_SENSOR_THRES_UP 516    //Original : 516
-#define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 500
-#define SWITCH_CHANGE_DEBOUNCE_MILLIS 275   //Original 275
+#define CURRENT_SENSOR_THRES 8
+#define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 1000
+#define SWITCH_CHANGE_DEBOUNCE_MILLIS 300   //Original 275
 #define SWITCH_MAX_TIME_BETWEEN_KNOCKS 1000
 #define LIGHT_ON_LONG_TIME 3600000
 #define LIGHT_ON_SHORT_TIME  60000
@@ -87,6 +86,7 @@ short nbrKnocks=0;
 unsigned long lastSwitchChange=0;
 unsigned long lastLightOn=0;
 lightStatus light = OFF;
+unsigned long actualMesure = 0;
 unsigned int nbrMesures = 0;
 
 
@@ -138,10 +138,10 @@ bool currentSensorTriggered() {
     actualMesure = 0;
     nbrMesures = 0;
     Serial.println(val);
-    return val > CURRENT_SENSOR_THRES_UP || val < CURRENT_SENSOR_THRES_DOWN;
+    return val > CURRENT_SENSOR_THRES;
   }
   else {
-    actualMesure += analogRead(PIN_CURRENT_SENSOR);
+    actualMesure += abs((int)analogRead(PIN_CURRENT_SENSOR) - (int)511);
     nbrMesures++;
     return false;
   }
