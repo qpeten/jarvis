@@ -122,7 +122,7 @@ void presentation()
 void loop()
 {
   manageCurrentSensor();
-  manageSwitch();
+  manageSwitchToggleOnly();
   manageLightTimer();
 }
 
