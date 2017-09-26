@@ -143,29 +143,33 @@ void toggleLight() {
 }
 
 void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
-  if(strcmp(topic, "/jarvis/in/rez/garage/command/overheadlight"))
-    setRelay(PIN_LIGHT_RELAY, getTruthValue(payload));
-  else if(strcmp(topic, "/jarvis/in/rez/garage/command/boilerparents"))
+  if(strcmp(topic, "/jarvis/in/rez/garage/command/overheadlight") == 0) {
+    if (strcmp(payload, "toggle") == 0)
+      toggleLight();
+    else
+      setRelay(PIN_LIGHT_RELAY, getTruthValue(payload));
+  }s
+  else if(strcmp(topic, "/jarvis/in/rez/garage/command/boilerparents") == 0)
     setRelay(PIN_BOILER_PARENTS_RELAY, getTruthValue(payload));
-  else if(strcmp(topic, "/jarvis/in/rez/garage/command/boileraymeric"))
+  else if(strcmp(topic, "/jarvis/in/rez/garage/command/boileraymeric") == 0)
     setRelay(PIN_BOILER_AYMERIC_RELAY, getTruthValue(payload));
 }
 
 //If unclear, defaults to false
 bool getTruthValue(const char* string) {
-  if (strcmp(string, "ON"))
+  if (strcmp(string, "ON") == 0)
     return true;
-  else if (strcmp(string, "On"))
+  else if (strcmp(string, "On") == 0)
     return true;
-  else if (strcmp(string, "on"))
+  else if (strcmp(string, "on") == 0)
     return true;
-  else if (strcmp(string, "1"))
+  else if (strcmp(string, "1") == 0)
     return true;
-  else if (strcmp(string, "TRUE"))
+  else if (strcmp(string, "TRUE") == 0)
     return true;
-  else if (strcmp(string, "True"))
+  else if (strcmp(string, "True") == 0)
     return true;
-  else if (strcmp(string, "true"))
+  else if (strcmp(string, "true") == 0)
     return true;
   else
     return false;
