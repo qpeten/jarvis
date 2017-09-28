@@ -192,7 +192,7 @@ void manageMQTTConnexion() {
 }
 
 boolean reconnect() {
-  if (client.connect("arduinoClient")) {
+  if (client.connect("rez-Garage")) {
     // Once connected, publish an announcement
     client.publish("/jarvis/out/state/rez/garage","New connection");
     // ... and (re)subscribe
