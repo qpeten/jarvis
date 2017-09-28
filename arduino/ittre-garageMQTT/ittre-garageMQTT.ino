@@ -77,15 +77,15 @@ void loop() {
 void setRelay(byte pin, bool state) {
   if (pin == PIN_LIGHT_RELAY) {
     digitalWrite(PIN_LIGHT_RELAY, state ? RELAY_ON : RELAY_OFF);
-    client.publish("/jarvis/out/rez/garage/state/overheadlight", getTruthValueFromBool(state));
+    client.publish("/jarvis/out/state/rez/garage/OverheadLight", getTruthValueFromBool(state));
   }
   else if (pin == PIN_BOILER_PARENTS_RELAY) {
     digitalWrite(PIN_BOILER_PARENTS_RELAY, state ? RELAY_ON : RELAY_OFF);
-    client.publish("/jarvis/out/rez/garage/state/boilerparents", getTruthValueFromBool(state));
+    client.publish("/jarvis/out/state/rez/garage/BoilerParents", getTruthValueFromBool(state));
   }
   else if (pin == PIN_BOILER_AYMERIC_RELAY) {
     digitalWrite(PIN_BOILER_AYMERIC_RELAY, state ? RELAY_ON : RELAY_OFF);
-    client.publish("/jarvis/out/rez/garage/state/boileraymeric", getTruthValueFromBool(state));
+    client.publish("/jarvis/out/state/rez/garage/BoilerAymeric", getTruthValueFromBool(state));
   }
 }
 
@@ -95,7 +95,7 @@ const char* getTruthValueFromBool (bool input) {
 
 void manageCurrentSensor() {
   if (currentSensorTriggered()) {
-    client.publish("/jarvis/out/rez/garage/state/garagedoormovement","on");
+    client.publish("/jarvis/out/state/rez/garage/GarageDoorMovement","on");
   }
 }
 
@@ -127,7 +127,7 @@ bool hasSwitchChanged() {
 
 void manageSwitchToggle() {
   if (hasSwitchChanged()) {
-    client.publish("/jarvis/out/rez/garage/state/lightswitch","toggle");
+    client.publish("/jarvis/out/state/rez/garage/LightSwitch","toggle");
     if (backupLightManagement)
       toggleLight();
   }
@@ -143,15 +143,15 @@ void toggleLight() {
 }
 
 void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
-  if(strcmp(topic, "/jarvis/in/rez/garage/command/overheadlight") == 0) {
+  if(strcmp(topic, "/jarvis/in/command/rez/garage/OverheadLight") == 0) {
     if (strcmp(payload, "toggle") == 0)
       toggleLight();
     else
       setRelay(PIN_LIGHT_RELAY, getTruthValue(payload));
-  }s
-  else if(strcmp(topic, "/jarvis/in/rez/garage/command/boilerparents") == 0)
+  }
+  else if(strcmp(topic, "/jarvis/in/command/rez/garage/BoilerParents") == 0)
     setRelay(PIN_BOILER_PARENTS_RELAY, getTruthValue(payload));
-  else if(strcmp(topic, "/jarvis/in/rez/garage/command/boileraymeric") == 0)
+  else if(strcmp(topic, "/jarvis/in/command/rez/garage/BoilerAymeric") == 0)
     setRelay(PIN_BOILER_AYMERIC_RELAY, getTruthValue(payload));
 }
 
@@ -194,9 +194,9 @@ void manageMQTTConnexion() {
 boolean reconnect() {
   if (client.connect("arduinoClient")) {
     // Once connected, publish an announcement
-    client.publish("/jarvis/out/rez/garage/state","New connection");
+    client.publish("/jarvis/out/state/rez/garage","New connection");
     // ... and (re)subscribe
-    client.subscribe("/jarvis/in/rez/garage/#");
+    client.subscribe("/jarvis/in/+/rez/garage/#");
   }
   return client.connected();
 }
