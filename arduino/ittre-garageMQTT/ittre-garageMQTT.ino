@@ -14,9 +14,15 @@
 #include "Ethernet.h"
 #include <PubSubClient.h>
 
+
+/**
+ * A6 = GND
+ * A7 = 5V
+ */
 #define PIN_LIGHT_RELAY 4
 #define PIN_BOILER_PARENTS_RELAY 5
 #define PIN_BOILER_AYMERIC_RELAY 6
+#define PIN_LIGHT_OUT_RELAY 7
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
 #define PIN_SWITCH_INPUT 2 // Pin used to detect the switch state
@@ -43,10 +49,15 @@ void setup() {
   pinMode(PIN_LIGHT_RELAY, OUTPUT);
   pinMode(PIN_BOILER_PARENTS_RELAY, OUTPUT);
   pinMode(PIN_BOILER_AYMERIC_RELAY, OUTPUT);
+  pinMode(PIN_LIGHT_OUT_RELAY, OUTPUT);
   pinMode(PIN_SWITCH_INPUT, INPUT_PULLUP);
   pinMode(PIN_CURRENT_SENSOR, INPUT);
+
+  pinMode(A6, LOW);
+  pinMode(A7, HIGH);
   
   setRelay(PIN_LIGHT_RELAY, false);
+  setRelay(PIN_LIGHT_OUT_RELAY, true);
   setRelay(PIN_BOILER_PARENTS_RELAY, true);
   setRelay(PIN_BOILER_AYMERIC_RELAY, true);
   lastSwitchState = digitalRead(PIN_SWITCH_INPUT);
@@ -87,6 +98,10 @@ void setRelay(byte pin, bool state) {
     digitalWrite(PIN_BOILER_AYMERIC_RELAY, state ? RELAY_ON : RELAY_OFF);
     client.publish("/jarvis/out/state/rez/garage/BoilerAymeric", getTruthValueFromBool(state));
   }
+  else if (pin == PIN_LIGHT_OUT_RELAY) {
+    digitalWrite(PIN_LIGHT_OUT_RELAY, state ? RELAY_ON : RELAY_OFF);
+    client.publish("/jarvis/out/state/rez/garage/ParkingLight", getTruthValueFromBool(state));
+  }
 }
 
 const char* getTruthValueFromBool (bool input) {
@@ -104,7 +119,6 @@ bool currentSensorTriggered() {
     int val = actualMesure/nbrMesures;
     actualMesure = 0;
     nbrMesures = 0;
-    Serial.println(val);
     return val > CURRENT_SENSOR_THRES;
   }
   else {
@@ -149,6 +163,8 @@ void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
     else
       setRelay(PIN_LIGHT_RELAY, getTruthValue(payload));
   }
+  else if(strcmp(topic, "/jarvis/in/command/rez/garage/ParkingLight") == 0)
+    setRelay(PIN_LIGHT_OUT_RELAY, getTruthValue(payload));
   else if(strcmp(topic, "/jarvis/in/command/rez/garage/BoilerParents") == 0)
     setRelay(PIN_BOILER_PARENTS_RELAY, getTruthValue(payload));
   else if(strcmp(topic, "/jarvis/in/command/rez/garage/BoilerAymeric") == 0)
