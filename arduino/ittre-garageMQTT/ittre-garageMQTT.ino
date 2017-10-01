@@ -16,8 +16,8 @@
 
 
 /**
- * A6 = GND
- * A7 = 5V
+ * A4 = GND
+ * A5 = 5V
  */
 #define PIN_LIGHT_RELAY 4
 #define PIN_BOILER_PARENTS_RELAY 5
@@ -31,7 +31,7 @@
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 1000
 #define SWITCH_CHANGE_DEBOUNCE_MILLIS 300   //Original 275
 
-static bool backupLightManagement = true; //Will always toggle the light when the switch is pressed, whatever MQTT says
+static bool backupLightManagement = false; //Will always toggle the light when the switch is pressed, whatever MQTT says
 
 byte mac[] = {0xDE, 0xAA, 0xAA, 0x01, 0x00, 0x00};
 IPAddress ip = (192, 168, 1, 50);
@@ -53,8 +53,11 @@ void setup() {
   pinMode(PIN_SWITCH_INPUT, INPUT_PULLUP);
   pinMode(PIN_CURRENT_SENSOR, INPUT);
 
-  pinMode(A6, LOW);
-  pinMode(A7, HIGH);
+
+  pinMode(A4, OUTPUT);
+  pinMode(A5, OUTPUT);
+  digitalWrite(A4, LOW);
+  digitalWrite(A5, HIGH);
   
   setRelay(PIN_LIGHT_RELAY, false);
   setRelay(PIN_LIGHT_OUT_RELAY, true);
@@ -157,9 +160,11 @@ void toggleLight() {
 }
 
 void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
+  payload[length] = "";
   if(strcmp(topic, "/jarvis/in/command/rez/garage/OverheadLight") == 0) {
-    if (strcmp(payload, "toggle") == 0)
+    if (strcmp(payload, "toggle") == 0) {
       toggleLight();
+    }
     else
       setRelay(PIN_LIGHT_RELAY, getTruthValue(payload));
   }
@@ -172,13 +177,15 @@ void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
 }
 
 //If unclear, defaults to false
-bool getTruthValue(const char* string) {
+bool getTruthValue(byte* string) {
+  Serial.println(string[0]);Serial.println(string[1]);Serial.println(string[2]);Serial.println(string[0]);
+  //Serial.println(strcmp(string, "on"));
   if (strcmp(string, "ON") == 0)
     return true;
   else if (strcmp(string, "On") == 0)
     return true;
-  else if (strcmp(string, "on") == 0)
-    return true;
+  else if (strcmp(string, "on") == 0) {
+    Serial.println("dfdsfdfdsf"); return true;}
   else if (strcmp(string, "1") == 0)
     return true;
   else if (strcmp(string, "TRUE") == 0)
