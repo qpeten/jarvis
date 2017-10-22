@@ -38,7 +38,7 @@ IPAddress ip = (192, 168, 1, 50);
 IPAddress MQTTserver(192, 168, 1, 150);
 
 bool lastSwitchState;
-unsigned long lastSwitchChange=0;
+unsigned long lastSwitchChange = 0;
 EthernetClient ethClient;
 PubSubClient client(ethClient);
 unsigned long MQTTLastReconnectAttempt = 0;
@@ -47,9 +47,9 @@ unsigned int nbrMesures = 0;
 
 void setup() {
   pinMode(PIN_LIGHT_RELAY, OUTPUT);
+  pinMode(PIN_LIGHT_OUT_RELAY, OUTPUT);
   pinMode(PIN_BOILER_PARENTS_RELAY, OUTPUT);
   pinMode(PIN_BOILER_AYMERIC_RELAY, OUTPUT);
-  pinMode(PIN_LIGHT_OUT_RELAY, OUTPUT);
   pinMode(PIN_SWITCH_INPUT, INPUT_PULLUP);
   pinMode(PIN_CURRENT_SENSOR, INPUT);
 
@@ -102,13 +102,16 @@ void setRelay(byte pin, bool state) {
     client.publish("/jarvis/out/state/rez/garage/BoilerAymeric", getTruthValueFromBool(state));
   }
   else if (pin == PIN_LIGHT_OUT_RELAY) {
-    digitalWrite(PIN_LIGHT_OUT_RELAY, state ? RELAY_ON : RELAY_OFF);
+    digitalWrite(PIN_LIGHT_OUT_RELAY, state ? !RELAY_ON : !RELAY_OFF);
     client.publish("/jarvis/out/state/rez/garage/ParkingLight", getTruthValueFromBool(state));
+  }
+  else {
+    Serial.println("Wrong pin for setRelay");
   }
 }
 
 const char* getTruthValueFromBool (bool input) {
-  return input ? "on" : "off";
+  return input ? "ON" : "OFF";
 }
 
 void manageCurrentSensor() {
@@ -144,14 +147,15 @@ bool hasSwitchChanged() {
 
 void manageSwitchToggle() {
   if (hasSwitchChanged()) {
-    client.publish("/jarvis/out/state/rez/garage/LightSwitch","toggle");
+    client.publish("/jarvis/out/command/rez/garage/LightSwitch",2);
     if (backupLightManagement)
       toggleLight();
   }
 }
 
 void toggleLight() {
-  if (digitalRead(PIN_LIGHT_RELAY) == RELAY_ON) {
+Serial.println(digitalRead(PIN_LIGHT_RELAY));
+  if (digitalRead(PIN_LIGHT_RELAY) == (RELAY_ON == 1)) {
     setRelay(PIN_LIGHT_RELAY, false);
   }
   else {
@@ -160,9 +164,10 @@ void toggleLight() {
 }
 
 void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
-  payload[length] = "";
+  Serial.println("Received message");
+  Serial.println(payload[0]);
   if(strcmp(topic, "/jarvis/in/command/rez/garage/OverheadLight") == 0) {
-    if (strcmp(payload, "toggle") == 0) {
+    if (payload[0] == '2') {
       toggleLight();
     }
     else
@@ -178,24 +183,12 @@ void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
 
 //If unclear, defaults to false
 bool getTruthValue(byte* string) {
-  Serial.println(string[0]);Serial.println(string[1]);Serial.println(string[2]);Serial.println(string[0]);
-  //Serial.println(strcmp(string, "on"));
-  if (strcmp(string, "ON") == 0)
-    return true;
-  else if (strcmp(string, "On") == 0)
-    return true;
-  else if (strcmp(string, "on") == 0) {
-    Serial.println("dfdsfdfdsf"); return true;}
-  else if (strcmp(string, "1") == 0)
-    return true;
-  else if (strcmp(string, "TRUE") == 0)
-    return true;
-  else if (strcmp(string, "True") == 0)
-    return true;
-  else if (strcmp(string, "true") == 0)
-    return true;
-  else
-    return false;
+  if (string[0] == '1') {
+	  return true;
+  }
+  else {
+	  return false;
+  }
 }
 
 void manageMQTTConnexion() {
@@ -219,7 +212,7 @@ boolean reconnect() {
     // Once connected, publish an announcement
     client.publish("/jarvis/out/state/rez/garage","New connection");
     // ... and (re)subscribe
-    client.subscribe("/jarvis/in/+/rez/garage/#");
+    client.subscribe("/jarvis/in/command/rez/garage/#");
   }
   return client.connected();
 }
