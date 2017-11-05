@@ -1,5 +1,6 @@
 char receivedChar;
 bool newData;
+int delayTest = 50;
 
 void setup() {
   // put your setup code here, to run once:
@@ -23,8 +24,23 @@ void recvOneChar() {
 
 void showNewData() {
  if (newData == true) {
+  if (receivedChar == '1') {
+    delayTest = 10;
+  }
+  else if (receivedChar == '2') {
+    delayTest = 20;
+  }
+  else if (receivedChar == '3') {
+    delayTest = 50;
+  }
+  else if (receivedChar == '4') {
+    delayTest = 100;
+  }
+  else if (receivedChar == '0') {
+    delayTest = 5;
+  }
  digitalWrite(4, HIGH);
- delay(50);
+ delay(delayTest);
  digitalWrite(4, LOW);
  newData = false;
  }
