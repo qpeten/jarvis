@@ -157,7 +157,7 @@ bool hasActualLightChanged() {
     lastLightState = currentSwitchState;
     lastLightChange = millis();
     Serial.print("Light has changed. New state: ");
-    Serial.println(currentSwitchState);
+    Serial.println(!currentSwitchState);
     //digitalWrite(PIN_LIGHT_RELAY, false); //We can stop the toggle operation
     return true;
   }
@@ -168,7 +168,7 @@ bool hasActualLightChanged() {
 
 void manageActualLightChange() {
   if (hasActualLightChanged()) {
-    client.publish("/jarvis/out/state/rez/garage/OverheadLight", lastLightState ? "ON" : "OFF");
+    client.publish("/jarvis/out/state/rez/garage/OverheadLight", lastLightState ? "OFF" : "ON");
   }
 }
 
