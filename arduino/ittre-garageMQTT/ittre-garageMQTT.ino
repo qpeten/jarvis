@@ -68,6 +68,7 @@ void setup() {
   lastLightState = digitalRead(PIN_LIGHT_INPUT);
 
   Serial.begin(115200);
+  Serial.println("Has just started.");
 
   // start the Ethernet connection:
   if (Ethernet.begin(mac) == 0) {
@@ -92,7 +93,7 @@ void loop() {
 }
 
 void manageLightOutputToggle() {
-  if (millis() - lastLightToggleStart > PIN_LIGHT_TOGGLE_MILLIS) {
+  if (millis() - lastLightToggleStart > PIN_LIGHT_TOGGLE_MILLIS && digitalRead(PIN_LIGHT_RELAY)) {
     digitalWrite(PIN_LIGHT_RELAY, false);
   }
 }
@@ -144,13 +145,14 @@ bool currentSensorTriggered() {
 
 bool hasActualLightChanged() {
   bool currentSwitchState = digitalRead(PIN_LIGHT_INPUT);
-  if (millis() - lastLightChange > LIGHT_CHANGE_DEBOUNCE_MILLIS &&
-      lastLightState != currentSwitchState) {
+  if (millis() - lastLightChange > LIGHT_CHANGE_DEBOUNCE_MILLIS && lastLightState != currentSwitchState) {
     lastLightState = currentSwitchState;
     lastLightChange = millis();
     return true;
   }
-  return false;
+  else {
+    return false;
+  }
 }
 
 void manageActualLightChange() {
