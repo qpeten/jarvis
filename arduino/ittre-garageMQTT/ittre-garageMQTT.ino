@@ -37,7 +37,7 @@ byte mac[] = {0xDE, 0xAA, 0xAA, 0x01, 0x00, 0x00};
 IPAddress ip = (192, 168, 1, 50);
 IPAddress MQTTserver(192, 168, 1, 150);
 
-bool lastLightState;
+bool lastLightState = digitalRead(PIN_LIGHT_RELAY);
 unsigned long lastLightChange = 0;
 unsigned long lastCurrentSensorDetected = 0;
 unsigned long lastLightToggleStart = 0;
@@ -88,7 +88,7 @@ void setup() {
 void loop() {
   manageMQTTConnexion();
   manageActualLightChange();
-  //manageCurrentSensor();
+  manageCurrentSensor();
   manageLightOutputToggle();
 }
 
