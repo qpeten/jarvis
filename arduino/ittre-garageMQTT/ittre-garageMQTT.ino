@@ -149,6 +149,7 @@ bool hasActualLightChanged() {
   if (millis() - lastLightChange > LIGHT_CHANGE_DEBOUNCE_MILLIS && lastLightState != currentSwitchState) {
     lastLightState = currentSwitchState;
     lastLightChange = millis();
+    Serial.println("Light has changed.");
     digitalWrite(PIN_LIGHT_RELAY, false); //We can stop the toggle operation
     return true;
   }
