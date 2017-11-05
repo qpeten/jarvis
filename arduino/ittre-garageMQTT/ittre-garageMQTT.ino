@@ -31,7 +31,7 @@
 #define CURRENT_SENSOR_THRES 8
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 1000
 #define LIGHT_CHANGE_DEBOUNCE_MILLIS 50
-#define CURRENT_SENSOR_DEBOUNCE_MILLIS 14000 //Should be slightly longer than the time it takes to open or close the door
+#define CURRENT_SENSOR_DEBOUNCE_MILLIS 21000 //Should be slightly longer than the time it takes to open or close the door
 
 byte mac[] = {0xDE, 0xAA, 0xAA, 0x01, 0x00, 0x00};
 IPAddress ip = (192, 168, 1, 50);
@@ -126,6 +126,7 @@ const char* getTruthValueFromBool (bool input) {
 
 void manageCurrentSensor() {
   if (currentSensorTriggered() && millis() - lastCurrentSensorDetected > CURRENT_SENSOR_DEBOUNCE_MILLIS) {
+    lastCurrentSensorDetected = millis();
     client.publish("/jarvis/out/state/rez/garage/GarageDoorMovement","MVMT");
   }
 }
