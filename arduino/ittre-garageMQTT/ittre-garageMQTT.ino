@@ -87,7 +87,7 @@ void setup() {
 
 void loop() {
   manageMQTTConnexion();
-  //manageActualLightChange();
+  manageActualLightChange();
   //manageCurrentSensor();
   //manageLightOutputToggle();
 }
@@ -125,7 +125,7 @@ const char* getTruthValueFromBool (bool input) {
 
 void manageCurrentSensor() {
   if (currentSensorTriggered() && millis() - lastCurrentSensorDetected > CURRENT_SENSOR_DEBOUNCE_MILLIS) {
-    client.publish("/jarvis/out/state/rez/garage/GarageDoorMovement","MOVEMENT");
+    client.publish("/jarvis/out/state/rez/garage/GarageDoorMovement","MVMT");
   }
 }
 
