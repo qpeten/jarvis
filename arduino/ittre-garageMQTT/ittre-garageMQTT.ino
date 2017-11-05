@@ -87,7 +87,7 @@ void setup() {
 
 void loop() {
   manageMQTTConnexion();
-  manageActualLightChange();
+  //manageActualLightChange();
   manageCurrentSensor();
   manageLightOutputToggle();
 }
