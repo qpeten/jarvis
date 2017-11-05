@@ -19,7 +19,7 @@
  * A4 = GND
  * A5 = 5V
  */
-#define PIN_LIGHT_RELAY 4
+#define PIN_LIGHT_RELAY 9
 #define PIN_LIGHT_TOGGLE_MILLIS 25  //Time the relay has to be kept up for the light to actually change
 #define PIN_BOILER_PARENTS_RELAY 5
 #define PIN_BOILER_AYMERIC_RELAY 6
