@@ -19,14 +19,14 @@
  * A4 = GND
  * A5 = 5V
  */
-#define PIN_LIGHT_RELAY 9
+#define PIN_LIGHT_RELAY 4
 #define PIN_LIGHT_TOGGLE_MILLIS 25  //Time the relay has to be kept up for the light to actually change
 #define PIN_BOILER_PARENTS_RELAY 5
 #define PIN_BOILER_AYMERIC_RELAY 6
 #define PIN_LIGHT_OUT_RELAY 7
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
-#define PIN_LIGHT_INPUT 2 // Pin used to detect the switch state
+#define PIN_LIGHT_INPUT 9 // Pin used to detect the switch state
 #define PIN_CURRENT_SENSOR 14
 #define CURRENT_SENSOR_THRES 8
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 1000
