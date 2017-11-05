@@ -80,8 +80,6 @@ void setup() {
   //Setting MQTT up
   client.setServer(MQTTserver, 1883);
   client.setCallback(MQTTMessageReceived);
-
-  //attachInterrupt(digitalPinToInterrupt(2), nothing, RISING); //To remove interrupt problems
   
   // give the Ethernet shield a second to initialize:
   delay(1000);
@@ -92,10 +90,6 @@ void loop() {
   manageActualLightChange();
   manageCurrentSensor();
   manageLightOutputToggle();
-}
-
-void nothing() {
-  return;
 }
 
 void manageLightOutputToggle() {
@@ -173,7 +167,7 @@ void manageActualLightChange() {
 }
 
 void toggleLight(bool newState) {
-  if ((digitalRead(PIN_LIGHT_INPUT) == (RELAY_ON == 1)) xor newState) {
+  if ((digitalRead(PIN_LIGHT_INPUT) == 0) xor newState) {
     Serial.println("Turning relay on.");
     digitalWrite(PIN_LIGHT_RELAY, true);
     lastLightToggleStart = millis();
