@@ -20,13 +20,13 @@
  * A5 = 5V
  */
 #define PIN_LIGHT_RELAY 4
+#define PIN_LIGHT_INPUT 9 // Pin used to detect the switch state
 #define PIN_LIGHT_TOGGLE_MILLIS 25  //Time the relay has to be kept up for the light to actually change
 #define PIN_BOILER_PARENTS_RELAY 5
 #define PIN_BOILER_AYMERIC_RELAY 6
 #define PIN_LIGHT_OUT_RELAY 7
 #define RELAY_ON 1  // GPIO value to write to turn on attached relay
 #define RELAY_OFF 0 // GPIO value to write to turn off attached relay
-#define PIN_LIGHT_INPUT 9 // Pin used to detect the switch state
 #define PIN_CURRENT_SENSOR 14
 #define CURRENT_SENSOR_THRES 8
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 1000
@@ -37,7 +37,7 @@ byte mac[] = {0xDE, 0xAA, 0xAA, 0x01, 0x00, 0x00};
 IPAddress ip = (192, 168, 1, 50);
 IPAddress MQTTserver(192, 168, 1, 150);
 
-bool lastLightState = digitalRead(PIN_LIGHT_RELAY);
+bool lastLightState = !digitalRead(PIN_LIGHT_RELAY);
 unsigned long lastLightChange = 0;
 unsigned long lastCurrentSensorDetected = 0;
 unsigned long lastLightToggleStart = 0;
@@ -87,13 +87,13 @@ void setup() {
 
 void loop() {
   manageMQTTConnexion();
-  //manageActualLightChange();
+  manageActualLightChange();
   manageCurrentSensor();
   manageLightOutputToggle();
 }
 
 void manageLightOutputToggle() {
-  if (millis() - lastLightToggleStart > PIN_LIGHT_TOGGLE_MILLIS && digitalRead(PIN_LIGHT_RELAY)) {
+  if (millis() - lastLightToggleStart > PIN_LIGHT_TOGGLE_MILLIS) {
     Serial.println("Turning relay off.");
     digitalWrite(PIN_LIGHT_RELAY, false);
   }
