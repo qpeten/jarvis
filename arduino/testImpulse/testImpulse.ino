@@ -26,20 +26,26 @@ void showNewData() {
  if (newData == true) {
   if (receivedChar == '1') {
     delayTest = 10;
+    Serial.println("New delay = 10ms");
   }
   else if (receivedChar == '2') {
     delayTest = 20;
+    Serial.println("New delay = 20ms");
   }
   else if (receivedChar == '3') {
     delayTest = 50;
+    Serial.println("New delay = 50ms");
   }
   else if (receivedChar == '4') {
     delayTest = 100;
+    Serial.println("New delay = 100ms");
   }
   else if (receivedChar == '0') {
     delayTest = 5;
+    Serial.println("New delay = 5ms");
   }
  digitalWrite(4, HIGH);
+ Serial.println("Switching…");
  delay(delayTest);
  digitalWrite(4, LOW);
  newData = false;
