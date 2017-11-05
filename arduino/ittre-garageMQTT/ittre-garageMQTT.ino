@@ -81,7 +81,7 @@ void setup() {
   client.setServer(MQTTserver, 1883);
   client.setCallback(MQTTMessageReceived);
 
-  attachInterrupt(digitalPinToInterrupt(2), nothing, RISING); //To remove interrupt problems
+  //attachInterrupt(digitalPinToInterrupt(2), nothing, RISING); //To remove interrupt problems
   
   // give the Ethernet shield a second to initialize:
   delay(1000);
