@@ -94,7 +94,6 @@ void loop() {
 
 void manageLightOutputToggle() {
   if (millis() - lastLightToggleStart > PIN_LIGHT_TOGGLE_MILLIS) {
-    Serial.println("Turning relay off.");
     digitalWrite(PIN_LIGHT_RELAY, false);
   }
 }
