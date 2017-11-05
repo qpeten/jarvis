@@ -156,7 +156,8 @@ bool hasActualLightChanged() {
   if (millis() - lastLightChange > LIGHT_CHANGE_DEBOUNCE_MILLIS && lastLightState != currentSwitchState) {
     lastLightState = currentSwitchState;
     lastLightChange = millis();
-    Serial.println("Light has changed.");
+    Serial.print("Light has changed. New state: ");
+    Serial.println(currentSwitchState);
     digitalWrite(PIN_LIGHT_RELAY, false); //We can stop the toggle operation
     return true;
   }
@@ -172,12 +173,8 @@ void manageActualLightChange() {
 }
 
 void toggleLight(bool newState) {
-  Serial.print("Toggle light. Pin = ");
-  Serial.print(digitalRead(PIN_LIGHT_INPUT));
-  Serial.print(" New state = ");
-  Serial.print(newState);
   if ((digitalRead(PIN_LIGHT_INPUT) == (RELAY_ON == 1)) xor newState) {
-    Serial.println(" Turning relay on.");
+    Serial.println("Turning relay on.");
     digitalWrite(PIN_LIGHT_RELAY, true);
     lastLightToggleStart = millis();
   }
