@@ -80,6 +80,8 @@ void setup() {
   //Setting MQTT up
   client.setServer(MQTTserver, 1883);
   client.setCallback(MQTTMessageReceived);
+
+  attachInterrupt(digitalPinToInterrupt(2), nothing, RISING); //To remove interrupt problems
   
   // give the Ethernet shield a second to initialize:
   delay(1000);
@@ -90,6 +92,10 @@ void loop() {
   manageActualLightChange();
   manageCurrentSensor();
   manageLightOutputToggle();
+}
+
+void nothing() {
+  return;
 }
 
 void manageLightOutputToggle() {
