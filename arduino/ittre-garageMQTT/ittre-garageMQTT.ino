@@ -30,7 +30,7 @@
 #define PIN_CURRENT_SENSOR 14
 #define CURRENT_SENSOR_THRES 8
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 1000
-#define LIGHT_CHANGE_DEBOUNCE_MILLIS 300   //Original 275
+#define LIGHT_CHANGE_DEBOUNCE_MILLIS 50
 #define CURRENT_SENSOR_DEBOUNCE_MILLIS 14000 //Should be slightly longer than the time it takes to open or close the door
 
 byte mac[] = {0xDE, 0xAA, 0xAA, 0x01, 0x00, 0x00};
@@ -94,6 +94,7 @@ void loop() {
 
 void manageLightOutputToggle() {
   if (millis() - lastLightToggleStart > PIN_LIGHT_TOGGLE_MILLIS && digitalRead(PIN_LIGHT_RELAY)) {
+    Serial.println(" Turning relay off.");
     digitalWrite(PIN_LIGHT_RELAY, false);
   }
 }
@@ -162,7 +163,12 @@ void manageActualLightChange() {
 }
 
 void toggleLight(bool newState) {
+  Serial.print("Toggle light. Pin = ");
+  Serial.print(digitalRead(PIN_LIGHT_RELAY));
+  Serial.print(" New state = ");
+  Serial.print(newState);
   if ((digitalRead(PIN_LIGHT_RELAY) == (RELAY_ON == 1)) xor newState) {
+    Serial.println(" Turning relay on.");
     digitalWrite(PIN_LIGHT_RELAY, true);
     lastLightToggleStart = millis();
   }
@@ -170,9 +176,8 @@ void toggleLight(bool newState) {
 
 void MQTTMessageReceived(char* topic, byte* payload, unsigned int length) {
   Serial.println("Received message");
-  if(strcmp(topic, "/jarvis/in/command/rez/garage/OverheadLight") == 0) {
+  if(strcmp(topic, "/jarvis/in/command/rez/garage/OverheadLight") == 0)
     setRelay(PIN_LIGHT_RELAY, getTruthValue(payload));
-  }
   else if(strcmp(topic, "/jarvis/in/command/rez/garage/ParkingLight") == 0)
     setRelay(PIN_LIGHT_OUT_RELAY, getTruthValue(payload));
   else if(strcmp(topic, "/jarvis/in/command/rez/garage/BoilerParents") == 0)
