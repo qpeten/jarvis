@@ -1,6 +1,5 @@
 /**
- * This node is meant to mesure determine if the garage doors are running by reading the current the motors for the doors are drowing.
- * It will send "MVMT" on the serial each time it has determined that happend
+ * This node is meant to output the value mesured on on pin to Serial
  * 
  * Outputs :
  *   - Serial
@@ -9,14 +8,14 @@
  */
 
 #define PIN_CURRENT_SENSOR 14
-#define CURRENT_SENSOR_THRES 8
+/*#define CURRENT_SENSOR_THRES 8
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 5000
 #define CURRENT_SENSOR_DEBOUNCE_MILLIS 21000 //Should be slightly longer than the time it takes to open or close the door. Default : 21000
 
 unsigned long lastCurrentSensorDetected = 0;
 unsigned long actualMesure = 0;
 unsigned int nbrMesures = 0;
-
+*/
 void setup() {
   pinMode(PIN_CURRENT_SENSOR, INPUT);
 
@@ -24,9 +23,10 @@ void setup() {
 }
 
 void loop() {
-  manageCurrentSensor();
+  //manageCurrentSensor();
+  Serial.println(analogRead(PIN_CURRENT_SENSOR));
 }
-
+/*
 void manageCurrentSensor() {
   if (currentSensorTriggered() && millis() - lastCurrentSensorDetected > CURRENT_SENSOR_DEBOUNCE_MILLIS) {
     lastCurrentSensorDetected = millis();
@@ -36,7 +36,7 @@ void manageCurrentSensor() {
 
 bool currentSensorTriggered() {
   if (nbrMesures > CURRENT_SENSOR_SMOOTHING_NBR_READINGS) {
-    Serial.println("Cycle complete");
+    //Serial.println("Cycle complete");
     int val = actualMesure/nbrMesures;
     actualMesure = 0;
     nbrMesures = 0;
@@ -49,4 +49,4 @@ bool currentSensorTriggered() {
     return false;
   }
 }
-
+*/
