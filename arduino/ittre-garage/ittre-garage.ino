@@ -11,7 +11,7 @@
 #define PIN_CURRENT_SENSOR 14
 #define CURRENT_SENSOR_THRES 8
 #define CURRENT_SENSOR_SMOOTHING_NBR_READINGS 10000
-#define CURRENT_SENSOR_DEBOUNCE_MILLIS 21000 //Should be slightly longer than the time it takes to open or close the door
+#define CURRENT_SENSOR_DEBOUNCE_MILLIS 000 //Should be slightly longer than the time it takes to open or close the door. Default : 21000
 
 unsigned long lastCurrentSensorDetected = 0;
 unsigned long actualMesure = 0;
