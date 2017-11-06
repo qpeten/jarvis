@@ -43,7 +43,7 @@ bool currentSensorTriggered() {
   }
   else {
     actualMesure += abs((int)analogRead(PIN_CURRENT_SENSOR) - (int)511);
-    Serial.println(analogRead(PIN_CURRENT_SENSOR));
+    //Serial.println(analogRead(PIN_CURRENT_SENSOR));
     nbrMesures++;
     return false;
   }
