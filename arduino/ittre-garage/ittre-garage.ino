@@ -36,6 +36,7 @@ void manageCurrentSensor() {
 
 bool currentSensorTriggered() {
   if (nbrMesures > CURRENT_SENSOR_SMOOTHING_NBR_READINGS) {
+    Serial.println("Cycle complete");
     int val = actualMesure/nbrMesures;
     actualMesure = 0;
     nbrMesures = 0;
