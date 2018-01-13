@@ -3,10 +3,9 @@
  * 
  */
 
-#define PIN_SWITCH_INPUT 2
+#define PIN_SWITCH_INPUT 8
 #define PIN_LED_OUTPUT 3
-#define PIN_MOTION_INPUT 8
-#define PIN_PWR_OUTPUT 7
+#define PIN_PWR_OUTPUT 2
 #define NUM_READINGS_MQTT_LED_DIMMER 50 //How many sample to smooth the input value of the LEDs
 #define TIME_READINGS_MQTT_LED_DIMMER_MS 8 //How long to wait befor readings (if no new reading is received, the previous value is used)
 #define DEBOUNCE_TIME_SWITCH_MS 100
@@ -19,7 +18,7 @@
 
 
 
-byte mac[]    = {  0xDE, 0xED, 0xBA, 0xFE, 0xFE, 0xED };
+byte mac[]    = {  0xDE, 0xAD, 0xAA, 0xAA, 0x72, 0x19 };
 IPAddress ip(192, 168, 1, 210);
 IPAddress server(192, 168, 1, 150);
 
@@ -40,25 +39,28 @@ unsigned long lastMotionDetected = 0;
 
 void setup()
 {
+  Serial.begin(115200);
+  Serial.println("Restarting");
   client.setServer(server, 1883);
   client.setCallback(callback);
-
   for (unsigned char i = 0; i < NUM_READINGS_MQTT_LED_DIMMER; i++) {
     lastInputs[i] = 0;
   }
 
+  delay(1000);
   Ethernet.begin(mac);
+  
+  Serial.println("LAN OK");
   delay(1000);
   lastReconnectAttempt = 0;
-  Serial.begin(115200);
-  Serial.println("Restarting");
   pinMode(PIN_LED_OUTPUT, OUTPUT);
   pinMode(PIN_SWITCH_INPUT, INPUT_PULLUP);
-  pinMode(PIN_MOTION_INPUT, INPUT_PULLUP);
+//  pinMode(PIN_MOTION_INPUT, INPUT_PULLUP);
   pinMode(PIN_PWR_OUTPUT, OUTPUT);
   digitalWrite(PIN_LED_OUTPUT, false);
   lastValueSwitch = digitalRead(PIN_SWITCH_INPUT);
   digitalWrite(PIN_PWR_OUTPUT, true); //Power supply STDBY
+  Serial.println("Setup finished.");
 }
 
 void loop()
@@ -66,17 +68,18 @@ void loop()
   manageMQTTConnexion();
   manageSwitch();
   manageLEDDimmer();
-  manageMotionSensor();
+  //manageMotionSensor();
+  Ethernet.maintain();
 }
 
+    
 
-
-void manageMotionSensor() {
+/* void manageMotionSensor() {
   if (millis() > lastMotionDetected + DEBOUNCE_TIME_MOTION_MS && digitalRead(PIN_MOTION_INPUT)) {
-    Serial.println("Tripped");
+    client.publish("/jarvis/out/status/etage/chQuentin/motion", "MVMT");
     lastMotionDetected = millis();
   }
-}
+} */
 
 void manageSwitch() {
   if (millis() > lastSwitchToggle + DEBOUNCE_TIME_SWITCH_MS) {
@@ -95,9 +98,11 @@ void toggleLED() {
     newValue = 0;
 
   lastInputsAddNewReading(newValue);
-  char buf [4];
-  sprintf (buf, "%03i", newValue);
-  client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", buf);
+  
+  if (newValue == 0)
+    client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", "0");
+  else
+    client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", "100");
 }
 
 void manageLEDDimmer() {
@@ -109,7 +114,7 @@ void manageLEDDimmer() {
     else
       digitalWrite(PIN_PWR_OUTPUT, true);
       
-    analogWrite(PIN_LED_OUTPUT, lastInputsTotal/NUM_READINGS_MQTT_LED_DIMMER);
+    analogWrite(PIN_LED_OUTPUT, lastInputsTotal/NUM_READINGS_MQTT_LED_DIMMER); 
     lastInputsLastReading = millis();
   }
 }
@@ -123,6 +128,7 @@ void lastInputsRefresh() {
 
   lastInputsAddNewReading(lastInputs[readIndex]);
 }
+
 void lastInputsAddNewReading(unsigned char value) {
   lastInputsTotal -= lastInputs[lastInputsIndex];
   lastInputs[lastInputsIndex] = value;
@@ -166,7 +172,22 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void parseSideLightMQTTMessage(char* payload) {
   unsigned char dimmerValue = atoi(payload);
-  lastInputsAddNewReading(dimmerValue);
+  unsigned char output;
+  if (dimmerValue > 100) {
+    dimmerValue = 100;
+  }
+  
+  if (dimmerValue > 10)
+    output = map(dimmerValue, 11, 100, 31, 255);
+  else if (dimmerValue == 1)
+    output = 1;
+  else if (dimmerValue == 0)
+    output = 0;
+  else
+    output = map(dimmerValue, 2, 10, 2, 30);
+  
+  Serial.println(output);
+  lastInputsAddNewReading(output);
 }
 
 
