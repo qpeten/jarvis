@@ -31,6 +31,7 @@ unsigned char lastInputs[NUM_READINGS_MQTT_LED_DIMMER];
 unsigned char lastInputsIndex = 0;
 int lastInputsTotal = 0;
 unsigned long lastInputsLastReading = 0;
+unsigned char targetValuePercentage = 0;
 
 bool lastValueSwitch;
 unsigned long lastSwitchToggle = 0;
@@ -50,7 +51,7 @@ void setup()
   delay(1000);
   Ethernet.begin(mac);
   
-  Serial.println("LAN OK");
+  Serial.println("LAN done.");
   delay(1000);
   lastReconnectAttempt = 0;
   pinMode(PIN_LED_OUTPUT, OUTPUT);
@@ -93,16 +94,13 @@ void manageSwitch() {
 }
 
 void toggleLED() {
-  unsigned char newValue = 255;
+  unsigned char newValue = 100;
   if (lastInputsTotal/NUM_READINGS_MQTT_LED_DIMMER > 0)
     newValue = 0;
 
   lastInputsAddNewReading(newValue);
   
-  if (newValue == 0)
-    client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", "0");
-  else
-    client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", "100");
+  //client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", newValue);
 }
 
 void manageLEDDimmer() {
@@ -126,10 +124,35 @@ void lastInputsRefresh() {
   else
     readIndex = lastInputsIndex - 1;
 
-  lastInputsAddNewReading(lastInputs[readIndex]);
+  lastInputsAddNewReadingToTable(lastInputs[readIndex]);
 }
 
 void lastInputsAddNewReading(unsigned char value) {
+  if (value > 100)
+    value = 100;
+  else if (value < 0)
+    value = 0;
+
+  targetValuePercentage = value;
+  char buffer[4] = "";
+  sprintf(buffer, "%d", value);
+  client.publish("/jarvis/out/status/etage/chQuentin/sideLightBrightness", buffer);
+  
+  unsigned char output = 0;
+  
+  if (value > 10)
+    output = map(value, 11, 100, 31, 255);
+  else if (value == 1)
+    output = 1;
+  else if (value == 0)
+    output = 0;
+  else
+    output = map(value, 2, 10, 2, 30);
+
+  lastInputsAddNewReadingToTable(output);
+}
+
+void lastInputsAddNewReadingToTable(unsigned char value) {
   lastInputsTotal -= lastInputs[lastInputsIndex];
   lastInputs[lastInputsIndex] = value;
   lastInputsTotal += lastInputs[lastInputsIndex];
@@ -171,23 +194,7 @@ void callback(char* topic, byte* payload, unsigned int length) {
 }
 
 void parseSideLightMQTTMessage(char* payload) {
-  unsigned char dimmerValue = atoi(payload);
-  unsigned char output;
-  if (dimmerValue > 100) {
-    dimmerValue = 100;
-  }
-  
-  if (dimmerValue > 10)
-    output = map(dimmerValue, 11, 100, 31, 255);
-  else if (dimmerValue == 1)
-    output = 1;
-  else if (dimmerValue == 0)
-    output = 0;
-  else
-    output = map(dimmerValue, 2, 10, 2, 30);
-  
-  Serial.println(output);
-  lastInputsAddNewReading(output);
+  lastInputsAddNewReading(atoi(payload));
 }
 
 
